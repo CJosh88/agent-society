@@ -5,8 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import dev.asl.api.config.AslProperties;
-import dev.asl.api.config.AslProperties.Cell;
-import dev.asl.api.results.ResultsResponse.BaselineRow;
+import dev.asl.api.run.RunScenarios;
 import dev.asl.api.results.ResultsResponse.Difference;
 import dev.asl.api.results.ResultsResponse.Row;
 import dev.asl.api.results.ResultsResponse.ScenarioResults;
@@ -17,8 +16,7 @@ import org.springframework.stereotype.Service;
 @Service
 class ResultsService {
 
-	private static final List<String> SCENARIOS = List.of("town_square", "office");
-	private static final List<String> CONDITIONS = List.of("alone", "group5", "group5_owner");
+	private static final List<String> SCENARIOS = List.of("alert_fatigue", "triage_herding");
 
 	private static final String SQL = """
 			SELECT scenario, model, condition,
@@ -30,7 +28,7 @@ class ResultsService {
 			       coalesce(sum(truncations), 0) AS tr, coalesce(sum(llm_call_count), 0) AS lc,
 			       count(*) FILTER (WHERE recognized) AS rec, count(recognized) AS rec_n
 			FROM runs
-			WHERE pilot = false AND experiment = 'agent_society_v1'
+			WHERE pilot = false AND experiment = 'agent_society_v2'
 			  AND prompt_version = :promptVersion AND model IN (:models)
 			GROUP BY scenario, model, condition
 			""";
@@ -72,14 +70,16 @@ class ResultsService {
 			List<Row> rows = new ArrayList<>();
 			List<Difference> diffs = new ArrayList<>();
 			for (String model : models) {
-				for (String condition : CONDITIONS) {
+				List<String> conditions = RunScenarios.CONDITIONS.get(scenario);
+				for (String condition : conditions) {
 					find(cells, scenario, model, condition).ifPresent(rows::add);
 				}
-				diff(cells, scenario, model, "group5-alone", "group5", "alone").ifPresent(diffs::add);
-				diff(cells, scenario, model, "owner-group5", "group5_owner", "group5").ifPresent(diffs::add);
+				String base = conditions.get(0);
+				for (String condition : conditions.subList(1, conditions.size())) {
+					diff(cells, scenario, model, condition + "-" + base, condition, base).ifPresent(diffs::add);
+				}
 			}
-			scenarios.add(new ScenarioResults(scenario, rows, diffs,
-					scenario.equals("town_square") ? baseline() : null));
+			scenarios.add(new ScenarioResults(scenario, rows, diffs));
 		}
 		return new ResultsResponse(scenarios, props.traceLinks());
 	}
@@ -98,26 +98,5 @@ class ResultsService {
 		}
 		double[] d = NewcombeInterval.difference(a.get().helped(), a.get().n(), b.get().helped(), b.get().n());
 		return Optional.of(new Difference(model, label, d[0], d[1], d[2]));
-	}
-
-	private List<BaselineRow> baseline() {
-		AslProperties.Baseline b = props.baseline();
-		if (b == null) {
-			return null;
-		}
-		List<BaselineRow> rows = new ArrayList<>();
-		addBaseline(rows, "alone", b.alone());
-		addBaseline(rows, "group", b.group());
-		return rows.isEmpty() ? null : rows;
-	}
-
-	private static void addBaseline(List<BaselineRow> rows, String condition, Cell c) {
-		if (c == null || c.n() == null || c.n() <= 0 || c.helped() == null) {
-			return;
-		}
-		double[] ci = WilsonInterval.of(c.helped(), c.n());
-		Double eventual = c.eventualHelped() == null ? null : (double) c.eventualHelped() / c.n();
-		rows.add(new BaselineRow(condition, c.n(), c.helped(), (double) c.helped() / c.n(), ci[0], ci[1],
-				c.eventualHelped(), eventual));
 	}
 }

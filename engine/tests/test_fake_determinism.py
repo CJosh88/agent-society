@@ -8,14 +8,17 @@ from asl_engine import scenarios
 from asl_engine.llm import FakeScriptedChatModel
 from asl_engine.models import extract_action
 from asl_engine.personas import load_personas
+from asl_engine.scripts import COMMENTS
 
 PERSONA = load_personas()[0]
 
 
-def messages(scenario="office", condition="group5", tick=5):
-    others = [(p.name, "cafe") for p in load_personas()[1:5]] if condition != "alone" else []
-    view = {"scenario": scenario, "tick": tick, "own_location": "desk_area at (4, 4)", "visible": [],
-            "heard": [], "history": [], "problem_active": tick >= 3}
+def messages(scenario="alert_fatigue", condition="fatigue_6", tick=10):
+    others = [p.name for p in load_personas()[1:5]] if condition in ("dismiss", "endorse") else []
+    schedule = scenarios.notice_schedule(scenario, condition, [0, 1, 2, 3, 4, 5])
+    chat = [("Tom", t) for t in COMMENTS[condition]] if tick >= 3 and condition in COMMENTS else []
+    view = {"scenario": scenario, "tick": tick, "notices": [(t, n["text"]) for t, n in schedule.items() if t <= tick],
+            "chat": chat, "history": []}
     return [SystemMessage(scenarios.system_prompt(scenario, condition, PERSONA, others)),
             HumanMessage(scenarios.user_prompt(view))]
 
@@ -54,27 +57,48 @@ def test_probe_answer_is_no():
     assert FakeScriptedChatModel(run_seed=1).invoke(msgs).content == "No."
 
 
-def test_help_rates_follow_the_design_and_about_five_percent_are_malformed():
+def test_call_rates_follow_the_design_and_about_five_percent_are_malformed():
     n = 600
+    want = {"calm": 0.80, "fatigue_3": 0.55, "fatigue_6": 0.35}
     rates, malformed = {}, 0
-    for cond in ("alone", "group5", "group5_owner"):
-        helped = 0
+    for cond in want:
+        calls = 0
         for s in range(n):
-            out = reply(s, scenario="town_square", condition=cond)
-            a = extract_action(out)
+            a = extract_action(reply(s, condition=cond))
             if a is None:
                 malformed += 1
-            elif a.action in ("APPROACH", "CALL"):
-                helped += 1
-        rates[cond] = helped / n
-    assert abs(rates["alone"] - 0.30 * 0.95) < 0.07
-    assert abs(rates["group5"] - 0.08 * 0.95) < 0.05
-    assert abs(rates["group5_owner"] - 0.25 * 0.95) < 0.07
-    assert rates["alone"] > rates["group5_owner"] > rates["group5"]
+            elif a.action == "CALL":
+                calls += 1
+        rates[cond] = calls / n
+        assert abs(rates[cond] - want[cond] * 0.95) < 0.07, (cond, rates[cond])
+    assert rates["calm"] > rates["fatigue_3"] > rates["fatigue_6"]
     assert 0.02 < malformed / (3 * n) < 0.09
 
 
-def test_no_helping_before_the_problem_starts():
+def test_high_priority_rates_follow_the_design():
+    n = 800
+    want = {"alone": 0.85, "dismiss": 0.30, "endorse": 0.95}
+    highs = {}
+    for cond in want:
+        acts = [extract_action(reply(s, scenario="triage_herding", condition=cond, tick=4)) for s in range(n)]
+        picked = [a for a in acts if a is not None and a.action == "SET_PRIORITY"]
+        assert 0.4 < len(picked) / n < 0.55  # 0.5 per tick, less the malformed replies
+        highs[cond] = sum(a.priority == "HIGH" for a in picked) / len(picked)
+        assert abs(highs[cond] - want[cond]) < 0.07, (cond, highs[cond])
+
+
+def test_no_calls_before_the_real_alert_beyond_the_rare_false_one():
+    n = 400
+    calls = sum(1 for s in range(n)
+                if (a := extract_action(reply(s, condition="fatigue_6", tick=8))) is not None and a.action == "CALL")
+    assert calls / n < 0.10
+    assert all((a := extract_action(reply(s, condition="calm", tick=5))) is None or a.action == "WAIT"
+               for s in range(200))
+
+
+def test_the_fake_only_uses_verbs_on_the_menu():
     for s in range(200):
-        a = extract_action(reply(s, tick=2, condition="alone"))
-        assert a is None or a.action not in ("APPROACH", "CALL")
+        a = extract_action(reply(s, scenario="triage_herding", condition="dismiss", tick=5))
+        assert a is None or a.action in scenarios.MENU_VERBS["triage_herding"]
+        b = extract_action(reply(s, scenario="alert_fatigue", condition="calm", tick=10))
+        assert b is None or b.action in scenarios.MENU_VERBS["alert_fatigue"]

@@ -14,12 +14,11 @@ from datetime import datetime, timezone
 import httpx
 from scipy.stats import binomtest, fisher_exact
 
-from .config import CONDITIONS, SCENARIOS, api_url
+from .config import SCENARIO_CONDITIONS, SCENARIOS, api_url
 
 Z = 1.959963984540054
-CONDITION_LABELS = {"alone": "alone", "group5": "group5", "group5_owner": "group5_owner"}
-# (hypothesis, condition expected to be higher, condition expected to be lower)
-HYPOTHESES = [("H1", "alone", "group5"), ("H2", "group5_owner", "group5")]
+# scenario -> (hypothesis, condition expected to be higher, condition expected to be lower)
+HYPOTHESES = {"alert_fatigue": ("H1", "calm", "fatigue_6"), "triage_herding": ("H2", "alone", "dismiss")}
 
 
 # --- statistics -------------------------------------------------------------------------------
@@ -105,19 +104,19 @@ def run_tests(runs: list[dict], models: list[str]) -> list[dict]:
     """H1 and H2 for every scenario and model that has both conditions, with Holm over all of them."""
     rows = []
     for scenario in SCENARIOS:
+        name, hi, lo = HYPOTHESES[scenario]
         for model in models:
-            for name, hi, lo in HYPOTHESES:
-                a, b = _cell(runs, scenario, model, hi), _cell(runs, scenario, model, lo)
-                if not a or not b:
-                    continue
-                mc_b, mc_c, mc_p = mcnemar_greater({r["seed"]: r["focalHelped"] for r in a},
-                                                   {r["seed"]: r["focalHelped"] for r in b})
-                rows.append({
-                    "scenario": scenario, "model": model, "hypothesis": name, "hi": hi, "lo": lo,
-                    "x_hi": _helped(a), "n_hi": len(a), "x_lo": _helped(b), "n_lo": len(b),
-                    "p": fisher_greater(_helped(a), len(a), _helped(b), len(b)),
-                    "mcnemar_b": mc_b, "mcnemar_c": mc_c, "mcnemar_p": mc_p,
-                })
+            a, b = _cell(runs, scenario, model, hi), _cell(runs, scenario, model, lo)
+            if not a or not b:
+                continue
+            mc_b, mc_c, mc_p = mcnemar_greater({r["seed"]: r["focalHelped"] for r in a},
+                                               {r["seed"]: r["focalHelped"] for r in b})
+            rows.append({
+                "scenario": scenario, "model": model, "hypothesis": name, "hi": hi, "lo": lo,
+                "x_hi": _helped(a), "n_hi": len(a), "x_lo": _helped(b), "n_lo": len(b),
+                "p": fisher_greater(_helped(a), len(a), _helped(b), len(b)),
+                "mcnemar_b": mc_b, "mcnemar_c": mc_c, "mcnemar_p": mc_p,
+            })
     for row, adj in zip(rows, holm([r["p"] for r in rows])):
         row["p_holm"] = adj
     return rows
@@ -165,11 +164,12 @@ def build_report(runs: list[dict], models: list[str], when: datetime | None = No
     for scenario in SCENARIOS:
         out += [f"## {scenario}", ""]
         for model in models:
-            cells = {c: _cell(runs, scenario, model, c) for c in CONDITIONS}
+            conditions = SCENARIO_CONDITIONS[scenario]
+            cells = {c: _cell(runs, scenario, model, c) for c in conditions}
             if not any(cells.values()):
                 continue
             out += [f"### {model}", "",
-                    "| Condition | n | Helped (95% Wilson) | Early help (≤ tick 6) | Median help tick | "
+                    "| Condition | n | Outcome (95% Wilson) | Within 2 ticks of onset | Median outcome tick | "
                     "Runs with a parse failure | Runs with a truncation | Recognised |",
                     "| --- | --- | --- | --- | --- | --- | --- | --- |"]
             for c, cell in cells.items():
@@ -184,16 +184,15 @@ def build_report(runs: list[dict], models: list[str], when: datetime | None = No
                     f"{_pct(sum(r['truncations'] > 0 for r in cell) / n)} | "
                     f"{_pct(sum(bool(r['recognized']) for r in probed) / len(probed)) if probed else '–'} |")
             out.append("")
-            for label, hi, lo in (("group5 − alone", "group5", "alone"), ("group5_owner − group5", "group5_owner", "group5")):
-                if cells[hi] and cells[lo]:
-                    d, lo_ci, hi_ci = newcombe(_helped(cells[hi]), len(cells[hi]), _helped(cells[lo]), len(cells[lo]))
-                    out.append(f"- {label}: {_pp(d)} pp (95% Newcombe {_pp(lo_ci)} to {_pp(hi_ci)})")
+            base = conditions[0]
+            for c in conditions[1:]:
+                if cells[c] and cells[base]:
+                    d, lo_ci, hi_ci = newcombe(_helped(cells[c]), len(cells[c]), _helped(cells[base]), len(cells[base]))
+                    out.append(f"- {c} − {base}: {_pp(d)} pp (95% Newcombe {_pp(lo_ci)} to {_pp(hi_ci)})")
             out.append("")
-        if scenario == "town_square":
-            out += ["The human baseline for the town square is on the website's results table.", ""]
 
-    out += ["## H1 and H2: one-sided Fisher exact tests", "",
-            "Holm correction runs over all tests listed (12 when every model and scenario has both conditions). "
+    out += ["## H1 (alert fatigue) and H2 (herding): one-sided Fisher exact tests", "",
+            "Holm correction runs over all tests listed (6 when every model and scenario has both conditions). "
             "McNemar is the exact paired check on shared seeds.", ""]
     out += _tests_table(run_tests(runs, models))
 
@@ -206,6 +205,6 @@ def build_report(runs: list[dict], models: list[str], when: datetime | None = No
     out += _tests_table(run_tests(unrecognised, models))
     out += ["## Notes", "",
             "H3 (latency) and H4 (differences by model, scenario and Agreeableness) are descriptive: see the median "
-            "help ticks above. Power is limited: at 50 runs per cell, drops smaller than about 90% to 60% are "
+            "outcome ticks above. Power is limited: at 50 runs per cell, drops smaller than about 90% to 60% are "
             "underpowered.", ""]
     return "\n".join(out)

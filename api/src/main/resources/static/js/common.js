@@ -36,6 +36,22 @@ export function showError(target, err, retry) {
   );
 }
 
-export const CONDITION_LABELS = { alone: 'Alone', group5: 'Group of 5', group5_owner: 'Group of 5 + owner' };
-export const SCENARIO_LABELS = { town_square: 'Town square', office: 'Office' };
+export const CONDITION_LABELS = {
+  calm: 'Calm (no false alarms)', fatigue_3: '3 false alarms first', fatigue_6: '6 false alarms first',
+  alone: 'Alone', dismiss: 'Colleagues say low', endorse: 'Colleagues say high',
+};
+export const SCENARIO_LABELS = { alert_fatigue: 'Alert fatigue', triage_herding: 'Herding in triage' };
+/** What counts as the outcome in each scenario, in words. */
+export const OUTCOME_TEXT = {
+  alert_fatigue: {
+    column: 'Escalated the real alert (95% CI)',
+    yes: (tick) => `The focal agent escalated the real alert at tick ${tick}.`,
+    no: 'The focal agent did not escalate the real alert.',
+  },
+  triage_herding: {
+    column: 'Rated the ticket HIGH (95% CI)',
+    yes: (tick) => `The focal agent rated the ticket HIGH at tick ${tick}.`,
+    no: 'The focal agent did not rate the ticket HIGH.',
+  },
+};
 export const label = (map, key) => map[key] ?? key;

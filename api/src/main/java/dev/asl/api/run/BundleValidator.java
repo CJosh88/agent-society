@@ -26,13 +26,14 @@ class BundleValidator {
 		if (count(agents, "focal") != 1) {
 			throw new BadRequest("Exactly one focal agent is required");
 		}
-		int scripted = b.run().condition().equals("alone") ? 0 : 4;
-		if (count(agents, "scripted") != scripted) {
-			throw new BadRequest("Condition " + b.run().condition() + " requires " + scripted + " scripted agents");
+		String scenario = b.run().scenario();
+		String condition = b.run().condition();
+		if (!RunScenarios.CONDITIONS.get(scenario).contains(condition)) {
+			throw new BadRequest("Condition " + condition + " does not belong to scenario " + scenario);
 		}
-		int victims = b.run().scenario().equals("town_square") ? 1 : 0;
-		if (count(agents, "victim") != victims) {
-			throw new BadRequest("Scenario " + b.run().scenario() + " requires " + victims + " victim agents");
+		int scripted = condition.equals("dismiss") || condition.equals("endorse") ? 4 : 0;
+		if (count(agents, "scripted") != scripted) {
+			throw new BadRequest("Condition " + condition + " requires " + scripted + " scripted agents");
 		}
 
 		List<EventInfo> events = b.events();

@@ -8,16 +8,19 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-ENGINE_VERSION = "0.1.0"
-EXPERIMENT = "agent_society_v1"
+ENGINE_VERSION = "0.2.0"
+EXPERIMENT = "agent_society_v2"
 
 STUDY_MODELS = ("llama-3.1-8b", "gpt-oss-120b", "claude-haiku-5-5")
-SCENARIOS = ("town_square", "office")
-CONDITIONS = ("alone", "group5", "group5_owner")
+SCENARIOS = ("alert_fatigue", "triage_herding")
+# The first condition of each scenario is its baseline: the one every other condition is compared with.
+SCENARIO_CONDITIONS = {
+    "alert_fatigue": ("calm", "fatigue_3", "fatigue_6"),
+    "triage_herding": ("alone", "dismiss", "endorse"),
+}
+ONSET_TICK = {"alert_fatigue": 9, "triage_herding": 3}  # when the real alert or the ticket arrives
 
 MAX_TICKS = 12
-PROBLEM_TICK = 3
-EARLY_HELP_TICK = 6
 
 # Repo layout: <root>/engine/src/asl_engine/config.py
 ENGINE_DIR = Path(__file__).resolve().parents[2]
@@ -54,6 +57,23 @@ MODEL_REGISTRY: dict[str, ModelSpec] = {
         "gpt-oss-120b", "workers_ai", "@cf/openai/gpt-oss-120b", 0.35, 0.75,
         ("CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID"),
         extra=(("reasoning_effort", "low"),),
+    ),
+    "gpt-oss-20b": ModelSpec(
+        "gpt-oss-20b", "workers_ai", "@cf/openai/gpt-oss-20b", 0.2, 0.3,
+        ("CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID"),
+        extra=(("reasoning_effort", "low"),),
+    ),
+    "granite-4-micro": ModelSpec(  # Workers AI lists no price; this is a placeholder for the budget guard
+        "granite-4-micro", "workers_ai", "@cf/ibm-granite/granite-4.0-h-micro", 0.1, 0.1,
+        ("CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID"),
+    ),
+    "apertus-8b": ModelSpec(  # Workers AI lists no price; placeholder for the budget guard
+        "apertus-8b", "workers_ai", "@cf/swiss-ai/apertus-v1.5-8b", 0.1, 0.1,
+        ("CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID"),
+    ),
+    "glm-4.7-flash": ModelSpec(
+        "glm-4.7-flash", "workers_ai", "@cf/zai-org/glm-4.7-flash", 0.0605, 0.4,
+        ("CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID"),
     ),
     "claude-haiku-5-5": ModelSpec(
         "claude-haiku-5-5", "anthropic", "claude-haiku-5-5", 0.10, 0.50,

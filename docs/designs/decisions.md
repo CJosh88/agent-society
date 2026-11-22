@@ -84,3 +84,28 @@ Choices the design doc leaves open, and files added beyond its Target files tabl
 - **Fake model:** on the turn after an `APPROACH` of the problem target it says something with probability 0.85 (`FOLLOW_UP_PROBABILITY`).
 - **Probe question:** now *"One last question, outside the scene: in a sentence or two, what do you think was going on here?"* The old wording named "any well-known study", which led models to answer with a psychology experiment. The probe message also starts with the scenario's problem line, because the probe sees only the system prompt and would otherwise have nothing to describe. The question has no banned words, so it is now covered by the disguise test, with no exemption. `recognized` keeps the same matcher.
 - Pilots run before this change used the old probe and the old help rule. Delete or ignore them; none of them are study runs.
+
+## Help rule, second tightening, and the probe format (pilots 913)
+
+- **Walking away cancels an approach.** A pilot run (llama-3.1-8b, office, alone, seed 913) approached the dashboard at tick 4, moved off to get coffee at tick 5, then muttered a complaint at tick 6, and that `SAY` was coded as help. In `resolve`, a focal `MOVE`, or an `APPROACH` of anything other than the problem target, now clears `approach_tick`. A `WAIT` does not. A `SAY` within two ticks of an approach still counts only if the agent has not moved away since.
+- **Known limit:** a `SAY` is still any text, so muttering at the target counts. A `CALL` is the clean signal in the office; say so in the write-up.
+- **Probe in plain text.** Llama answered the probe with an action JSON object (it follows the JSON-only format from the system prompt), so `recognized` was meaningless for it. The probe question now ends *"Answer in plain sentences, not JSON."* The wording still contains no banned words.
+- Earlier pilots used the old rule and the old probe; use fresh seeds (920 and up) for new pilots.
+
+## Phone and contacts in the scene line
+
+- The first pilots showed llama-3.1-8b never used `CALL` (0 of 9 runs; gpt-oss-120b called in its one run). The prompt said only "phone or message someone who is not here", with no phone and no one to reach. Each scene line now says the agent has a mobile phone; in the office it also names three contacts (manager, the payment provider's support line, the IT contractor). Identical in every condition, so it cannot bias H1 or H2. Pilots 930 and up test whether the call rate changes; the help rule is decided after that.
+
+## M6: pivot to alert fatigue and herding in triage (design v0.3)
+
+- The bystander design hit an immediate-action ceiling in pilots (gpt-oss called at the first possible tick in every condition; Llama did the same in the office once it had a phone). The operator chose to replace town_square and office with `alert_fatigue` (CALL at tick 9 or later is the outcome) and `triage_herding` (SET_PRIORITY HIGH is the outcome). Design doc is v0.3.
+- Colleagues' comments land at tick 3 and are heard in the same tick, so the focal agent never decides before the herd has spoken. `scripted_turns` therefore runs before `focal_turn`.
+- `early_help` now means the outcome within two ticks of onset (tick 9 or tick 3), not tick 6. The column keeps its name.
+- Ids, columns and the `counts_as_help` field keep the old "help" wording to avoid churn.
+- The bystander runs on the server are removed by `V2__pivot.sql`. `PROMPT_VERSION` is `v2`, the experiment is `agent_society_v2` and the pre-registration tag is `prereg-v2`.
+
+## Calibration of the `calm` baseline (pilots 900-904)
+
+- Pilots showed every `alert_fatigue` run escalating once the real alert appeared (5/5 in every condition, both models), a ceiling in the baseline. Per the calibration rule only the baseline was tuned: the cost line now says calls are logged against the on-call record, and the real alert reads "Card payment success rate down to 62% over the last 10 minutes" instead of "0 successful in the last 4 minutes". The effect cells were not used. `triage_herding` was left unchanged.
+- The 62% wording still gave 8/8 escalations in `calm` for both models (gpt-oss always at tick 9). The real alert now reads "down to 91%", a smaller dip that is still serious. Baseline cells only were used. Target: 30-80% escalation in `calm`.
+- Study list kept as llama-3.1-8b, gpt-oss-120b, claude-haiku-5-5. Baseline pilots on `calm` (91% alert) escalated 8/8 for gpt-oss-120b, gpt-oss-20b and granite-4-micro, 5/5 for glm-4.7-flash, 6/8 for llama-3.1-8b; apertus-8b returned 403 (not enabled on the account). gpt-oss-20b, granite-4-micro, apertus-8b and glm-4.7-flash stay in the registry as pilot-only keys. Granite made 4-8 calls per run before any alert. The write-up reports the ceiling.

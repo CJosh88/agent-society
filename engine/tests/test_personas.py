@@ -15,7 +15,7 @@ def test_thirty_balanced_personas():
 
 
 def test_the_committed_file_is_exactly_make_personas_42():
-    """personas.json is frozen by the prereg-v1 tag; regenerate it only on purpose."""
+    """personas.json is frozen by the prereg-v2 tag; regenerate it only on purpose."""
     assert json.loads(PERSONAS_PATH.read_text(encoding="utf-8")) == make_personas(42)
 
 
@@ -26,4 +26,4 @@ def test_cast_is_a_pure_function_of_the_seed():
     chosen = [a["focal"].persona_id] + [p.persona_id for p in a["scripted"].values()]
     assert len(set(chosen)) == 5
     assert pick_cast(8, ps) != a
-    assert len(a["spawn_draws"]) == 5 and all(0 <= d < 4 for d in a["spawn_draws"])
+    assert sorted(a["alarm_order"]) == list(range(6))

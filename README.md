@@ -1,15 +1,15 @@
 # Agent Society Lab
 
-Does an LLM agent stop acting on a problem when passive bystanders are present, and does a named owner role restore action? One focal LLM agent shares a scene with 4 scripted, always-passive people, in a town square (a person collapses) or an office (a payments dashboard turns red).
+Can the context an LLM agent works in make it under-react to something that matters? One focal LLM agent works in a small shop in two scenarios. **Alert fatigue:** after 0, 3 or 6 false alarms, does the on-call agent still escalate a real payment alert? **Herding in triage:** when four scripted colleagues have all called a serious ticket low priority (or all high), does the agent follow them?
 
 Design: [docs/designs/design.md](docs/designs/design.md)
 
 ## Hypotheses (frozen before the batch runs)
 
-- **H1 — diffusion:** the focal agent helps less often in `group5` than `alone`.
-- **H2 — ownership:** the focal agent helps more often in `group5_owner` than in `group5`.
-- **H3 — latency (descriptive):** among runs where the focal agent helps, it helps later in `group5` than `alone`.
-- **H4 — exploratory:** effects differ by model, by scenario and by the persona's Agreeableness level.
+- **H1 — alert fatigue:** the focal agent escalates the real alert (a `CALL` at tick 9 or later) less often in `fatigue_6` than in `calm`.
+- **H2 — herding:** the focal agent rates the ticket HIGH less often in `dismiss` than in `alone`.
+- **H3 — latency (descriptive):** among runs with the outcome, it happens later in the condition expected to suppress it.
+- **H4 — exploratory:** `fatigue_3` (dose), `endorse` against `alone`, false escalations, and differences by model, scenario and the persona's Agreeableness level.
 
 
 ## How it works
@@ -88,3 +88,7 @@ deploy/deploy.sh user@host              # rsync to /opt/asl, then docker compose
 ```
 
 Caddy terminates HTTPS and proxies to the API; Postgres is never published. Certificates persist in the `caddy_data` volume.
+
+## Credits
+
+Replay sprites are Kenney's [Tiny Town](https://kenney.nl/assets/tiny-town) and [Tiny Dungeon](https://kenney.nl/assets/tiny-dungeon), released under CC0 (see `api/src/main/resources/static/img/CREDITS.txt`).

@@ -148,7 +148,7 @@ components:
           minLength: 1
         role:
           type: string
-          pattern: focal|scripted|victim
+          pattern: focal|scripted
         persona:
           type: object
           additionalProperties: {}
@@ -171,7 +171,7 @@ components:
           minimum: 0
         type:
           type: string
-          pattern: AGENT_SPAWNED|PROBLEM_STARTED|AGENT_MOVED|AGENT_SAID|AGENT_WAITED|AGENT_APPROACHED|AGENT_CALLED|ACTION_PARSE_FAILED|PROBE_ANSWERED|RUN_ENDED
+          pattern: AGENT_SPAWNED|NOTICE_SHOWN|AGENT_SAID|AGENT_WAITED|AGENT_CALLED|AGENT_PRIORITY_SET|ACTION_PARSE_FAILED|PROBE_ANSWERED|RUN_ENDED
         agent_id:
           type: string
         payload:
@@ -267,13 +267,13 @@ components:
           format: uuid
         experiment:
           type: string
-          pattern: agent_society_v1
+          pattern: agent_society_v2
         scenario:
           type: string
-          pattern: town_square|office
+          pattern: alert_fatigue|triage_herding
         condition:
           type: string
-          pattern: alone|group5|group5_owner
+          pattern: calm|fatigue_3|fatigue_6|alone|dismiss|endorse
         model:
           type: string
           minLength: 1
@@ -445,32 +445,6 @@ components:
         payload:
           type: object
           additionalProperties: {}
-    BaselineRow:
-      type: object
-      properties:
-        condition:
-          type: string
-        "n":
-          type: integer
-          format: int32
-        helped:
-          type: integer
-          format: int32
-        rate:
-          type: number
-          format: double
-        ciLow:
-          type: number
-          format: double
-        ciHigh:
-          type: number
-          format: double
-        eventualHelped:
-          type: integer
-          format: int32
-        eventualRate:
-          type: number
-          format: double
     Difference:
       type: object
       properties:
@@ -548,7 +522,3 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Difference"
-        baseline:
-          type: array
-          items:
-            $ref: "#/components/schemas/BaselineRow"

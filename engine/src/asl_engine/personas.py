@@ -80,15 +80,15 @@ def load_personas(path: Path = PERSONAS_PATH) -> list[Persona]:
 
 
 def pick_cast(seed: int, personas: list[Persona]) -> dict:
-    """Seed -> the focal persona, 4 distinct scripted personas and 5 spawn draws (each 0-3).
+    """Seed -> the focal persona, 4 distinct scripted personas and an order for the six false alarms.
 
     The draw order never depends on scenario or condition, so seed s gives the same people in every cell.
     """
     rng = random.Random(seed)
     idx = rng.sample(range(len(personas)), 5)
-    spawn_draws = [rng.randrange(4) for _ in range(5)]  # focal, s1, s2, s3, s4
+    alarm_order = rng.sample(range(6), 6)  # which false alarm comes first, second, ...
     return {
         "focal": personas[idx[0]],
         "scripted": {f"s{i}": personas[idx[i]] for i in range(1, 5)},
-        "spawn_draws": spawn_draws,
+        "alarm_order": alarm_order,
     }

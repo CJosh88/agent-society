@@ -14,8 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class RunIngestService {
 
-	private static final Set<String> DECISION_TYPES = Set.of("AGENT_MOVED", "AGENT_SAID", "AGENT_WAITED",
-			"AGENT_APPROACHED", "AGENT_CALLED", "ACTION_PARSE_FAILED");
+	private static final Set<String> DECISION_TYPES = Set.of("AGENT_SAID", "AGENT_WAITED", "AGENT_CALLED",
+			"AGENT_PRIORITY_SET", "ACTION_PARSE_FAILED");
 
 	private final BundleValidator validator;
 	private final RunRepository runs;
@@ -105,7 +105,7 @@ public class RunIngestService {
 				.map(EventInfo::tick).min(Integer::compare).orElse(null);
 		r.focalHelpTick = helpTick;
 		r.focalHelped = helpTick != null;
-		r.earlyHelp = helpTick != null && helpTick <= 6;
+		r.earlyHelp = helpTick != null && helpTick <= RunScenarios.ONSET_TICK.get(info.scenario()) + 2;
 		r.decisionCount = (int) b.events().stream()
 				.filter(e -> "focal".equals(e.agentId()) && DECISION_TYPES.contains(e.type())).count();
 		r.parseFailures = (int) b.events().stream().filter(e -> e.type().equals("ACTION_PARSE_FAILED")).count();

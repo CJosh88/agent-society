@@ -11,19 +11,11 @@ public record AslProperties(
 		List<String> studyModels,
 		String promptVersion,
 		List<UUID> featuredRunIds,
-		List<String> traceLinks,
-		Baseline baseline) {
+		List<String> traceLinks) {
 
 	public AslProperties {
 		studyModels = studyModels == null ? List.of() : studyModels;
 		featuredRunIds = featuredRunIds == null ? List.of() : featuredRunIds;
 		traceLinks = traceLinks == null ? List.of() : traceLinks;
-	}
-
-	/** Human baseline for the town square: before-the-end-of-seizure helping, plus optional eventual helping. */
-	public record Baseline(Cell alone, Cell group) {
-	}
-
-	public record Cell(Integer n, Integer helped, Integer eventualHelped) {
 	}
 }

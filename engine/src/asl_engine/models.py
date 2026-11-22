@@ -5,19 +5,23 @@ from __future__ import annotations
 import json
 from typing import Literal
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, field_validator
 
-Verb = Literal["WAIT", "MOVE", "SAY", "APPROACH", "CALL"]
+Verb = Literal["WAIT", "SAY", "CALL", "SET_PRIORITY"]
 
 
 class AgentAction(BaseModel):
     """What the focal agent's LLM call must return. Word limits are in the prompt, not enforced here."""
 
     action: Verb
-    target_location: str | None = None
-    target_id: str | None = None
+    priority: Literal["HIGH", "LOW"] | None = None
     text: str | None = None
     thought: str = ""
+
+    @field_validator("priority", mode="before")
+    @classmethod
+    def _upper(cls, v):
+        return v.strip().upper() if isinstance(v, str) else v
 
 
 class Persona(BaseModel):

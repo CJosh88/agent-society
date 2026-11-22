@@ -4,6 +4,7 @@ from langchain_core.messages import AIMessage
 from langchain_core.outputs import ChatGeneration, ChatResult
 from pydantic import PrivateAttr
 
+from asl_engine import scenarios
 from asl_engine.agent import build_agent_graph
 from asl_engine.llm import LLMContext
 from asl_engine.personas import load_personas
@@ -31,11 +32,10 @@ class QueueModel(BaseChatModel):
 
 def view():
     return {
-        "scenario": "town_square", "condition": "group5", "persona": load_personas()[0].model_dump(),
-        "others": [(p.name, "cafe") for p in load_personas()[1:5]], "tick": 4, "own_location": "bench at (4, 11)",
-        "visible": [("s1", "Tom", "cafe"), ("victim", "a stranger", "fountain")], "heard": [], "history": [],
-        "problem_active": True, "valid_locations": ["bus_stop", "cafe", "fountain", "bench", "market_stall"],
-        "valid_targets": ["s1", "victim"],
+        "scenario": "triage_herding", "condition": "dismiss", "persona": load_personas()[0].model_dump(),
+        "others": [p.name for p in load_personas()[1:5]], "tick": 4,
+        "notices": [(3, scenarios.TICKET)], "chat": [("Tom", "Low from me too.")], "history": [],
+        "valid_actions": ["WAIT", "SAY", "SET_PRIORITY"],
     }
 
 
@@ -45,12 +45,12 @@ async def run(replies):
     return out, model
 
 
-OK = ('{"action": "APPROACH", "target_id": "victim", "thought": "go"}', "stop")
+OK = ('{"action": "SET_PRIORITY", "priority": "HIGH", "thought": "go"}', "stop")
 
 
 async def test_valid_first_reply_ends_after_one_call():
     out, model = await run([OK])
-    assert out["action"]["action"] == "APPROACH" and not out["failed"]
+    assert out["action"]["action"] == "SET_PRIORITY" and not out["failed"]
     assert len(out["turn_calls"]) == 1 and out["turn_calls"][0]["parsed_ok"] is True
     assert out["turn_calls"][0]["attempt"] == 1 and out["turn_calls"][0]["kind"] == "decision"
     assert model._i == 1
@@ -58,7 +58,7 @@ async def test_valid_first_reply_ends_after_one_call():
 
 async def test_unparseable_reply_is_retried_once_with_the_error_line():
     out, model = await run([("I would help!", "stop"), OK])
-    assert out["action"]["action"] == "APPROACH"
+    assert out["action"]["action"] == "SET_PRIORITY"
     calls = out["turn_calls"]
     assert [c["attempt"] for c in calls] == [1, 2] and [c["parsed_ok"] for c in calls] == [False, True]
     assert "Your reply could not be used: no valid JSON action found. Reply with only one JSON object." \
@@ -79,16 +79,22 @@ async def test_truncation_is_recorded_when_the_last_reply_hit_the_length_limit()
 
 
 @pytest.mark.parametrize("bad, fragment", [
-    ('{"action": "MOVE", "target_location": "moon"}', "target_location 'moon' is not one of"),
-    ('{"action": "APPROACH", "target_id": "s9"}', "target_id 's9' is not in the You can see list"),
+    ('{"action": "CALL", "text": "help"}', "action 'CALL' is not one of: WAIT, SAY, SET_PRIORITY"),
     ('{"action": "SAY"}', "SAY needs non-empty text"),
-    ('{"action": "CALL", "text": "  "}', "CALL needs non-empty text"),
+    ('{"action": "SAY", "text": "  "}', "SAY needs non-empty text"),
+    ('{"action": "SET_PRIORITY"}', "SET_PRIORITY needs priority set to HIGH or LOW"),
+    ('{"action": "SET_PRIORITY", "priority": "MEDIUM"}', "no valid JSON action found"),
 ])
 async def test_scene_checks_trigger_a_retry(bad, fragment):
     out, model = await run([(bad, "stop"), OK])
-    assert out["action"]["action"] == "APPROACH"
+    assert out["action"]["action"] == "SET_PRIORITY"
     assert fragment in model._seen[1][1]
     assert out["turn_calls"][0]["parsed_ok"] is False
+
+
+async def test_priority_is_case_insensitive():
+    out, _ = await run([('{"action": "SET_PRIORITY", "priority": "low"}', "stop")])
+    assert out["action"]["priority"] == "LOW" and len(out["turn_calls"]) == 1
 
 
 async def test_reasoning_free_reply_and_usage_are_recorded():

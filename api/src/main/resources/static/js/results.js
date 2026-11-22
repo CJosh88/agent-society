@@ -1,4 +1,4 @@
-import { CONDITION_LABELS, SCENARIO_LABELS, el, getJson, label, showError } from './common.js';
+import { CONDITION_LABELS, OUTCOME_TEXT, SCENARIO_LABELS, el, getJson, label, showError } from './common.js';
 
 // The GitHub repository. If this is emptied, the repo and write-up links are left out.
 const REPO_URL = 'https://github.com/CJosh88/agent-society';
@@ -8,7 +8,7 @@ const pct = (x) => `${Math.round(x * 100)}%`;
 const rate = (r, lo, hi) => `${pct(r)} (${Math.round(lo * 100)}–${Math.round(hi * 100)})`;
 const pp = (x) => `${x < 0 ? '−' : '+'}${Math.abs(Math.round(x * 100))}`;
 const diffText = (d) => `${pp(d.diff)} pp (${pp(d.ciLow)} to ${pp(d.ciHigh)})`;
-const COMPARISONS = { 'group5-alone': 'group5 − alone', 'owner-group5': 'owner − group5' };
+const comparisonText = (c) => c.split('-').map((x) => label(CONDITION_LABELS, x)).join(' − ');
 
 const replayLink = (id, text = 'Replay') => el('a', { href: `replay.html?run=${encodeURIComponent(id)}` }, text);
 
@@ -25,9 +25,7 @@ async function loadFeatured() {
     body.replaceChildren(...runs.map((r) => el('article', { class: 'card' },
       el('h3', {}, label(SCENARIO_LABELS, r.scenario)),
       el('p', {}, `${label(CONDITION_LABELS, r.condition)} · ${r.model}`),
-      el('p', {}, r.focalHelped
-        ? `The focal agent helped at tick ${r.focalHelpTick}.`
-        : 'The focal agent did not help.'),
+      el('p', {}, r.focalHelped ? OUTCOME_TEXT[r.scenario].yes(r.focalHelpTick) : OUTCOME_TEXT[r.scenario].no),
       replayLink(r.id, 'Watch the replay'))));
   } catch (err) {
     showError(body, err, loadFeatured);
@@ -37,7 +35,7 @@ async function loadFeatured() {
 // ---- Results ----------------------------------------------------------------------------------
 
 function resultsTable(sc) {
-  const head = ['Model', 'Condition', 'n', 'Helped (95% CI)', 'Early help (≤ tick 6)', 'Median help tick',
+  const head = ['Model', 'Condition', 'n', OUTCOME_TEXT[sc.scenario].column, 'Within 2 ticks of onset', 'Median outcome tick',
     'Parse failures', 'Truncations', 'Recognised'];
   const dash = (v, f) => (v == null ? '–' : f(v));
   const body = [];
@@ -55,25 +53,13 @@ function resultsTable(sc) {
       body.push(el('tr', { class: 'diff' },
         el('th', { class: 'left', colspan: 2, scope: 'row' }, `${model}: differences`),
         el('td', { class: 'left', colspan: head.length - 2 },
-          diffs.map((d) => `${COMPARISONS[d.comparison] ?? d.comparison}: ${diffText(d)}`).join('  ·  '))));
+          diffs.map((d) => `${comparisonText(d.comparison)}: ${diffText(d)}`).join('  ·  '))));
     }
   }
-  if (sc.scenario === 'town_square') body.push(...baselineRows(sc.baseline, head.length));
   return el('div', { class: 'table-wrap' }, el('table', {},
-    el('caption', { class: 'left note' }, 'Helping rate by tick 12. Differences are in percentage points.'),
+    el('caption', { class: 'left note' }, 'Outcome rate by tick 12. Differences are in percentage points.'),
     el('thead', {}, el('tr', {}, head.map((h) => el('th', { scope: 'col' }, h)))),
     el('tbody', {}, body)));
-}
-
-function baselineRows(baseline, cols) {
-  if (!baseline || !baseline.length) {
-    return [el('tr', { class: 'baseline' }, el('td', { class: 'left', colspan: cols }, 'Human baseline: not entered yet.'))];
-  }
-  return baseline.map((b) => el('tr', { class: 'baseline' },
-    el('th', { class: 'left', colspan: 2, scope: 'row' }, `Human baseline, ${b.condition === 'alone' ? 'alone' : 'in a group'}`),
-    el('td', {}, b.n), el('td', {}, rate(b.rate, b.ciLow, b.ciHigh)),
-    el('td', { class: 'left', colspan: cols - 4 },
-      b.eventualRate == null ? '' : `eventual helping: ${pct(b.eventualRate)}`)));
 }
 
 async function loadResults() {
@@ -83,7 +69,7 @@ async function loadResults() {
     body.replaceChildren(...data.scenarios.flatMap((sc) => [
       el('h3', {}, label(SCENARIO_LABELS, sc.scenario)),
       ...(sc.rows.length ? [] : [el('p', { class: 'muted' }, 'No study runs yet.')]),
-      ...(sc.rows.length || sc.baseline?.length ? [resultsTable(sc)] : []),
+      ...(sc.rows.length ? [resultsTable(sc)] : []),
     ]), el('p', { class: 'note' },
       'Rates carry 95% Wilson intervals and differences 95% Newcombe intervals. Models are compared with themselves, never pooled.'));
     renderAboutLinks(data.traceLinks ?? []);
@@ -125,7 +111,7 @@ async function loadRuns() {
         el('td', { class: 'left' }, label(CONDITION_LABELS, r.condition)),
         el('td', { class: 'left' }, r.model + (r.pilot ? ' (pilot)' : '')),
         el('td', {}, r.seed),
-        el('td', { class: 'left' }, r.focalHelped ? `helped at tick ${r.focalHelpTick}` : 'did not help'),
+        el('td', { class: 'left' }, r.focalHelped ? `outcome at tick ${r.focalHelpTick}` : 'no outcome'),
         el('td', {}, replayLink(r.id)))))));
     const { number, totalPages, totalElements } = data.page;
     pager.replaceChildren(

@@ -47,7 +47,7 @@ class ResultsIT {
 					INSERT INTO runs (id, experiment, scenario, condition, model, seed, prompt_version, engine_version,
 					  pilot, started_at, ended_at, focal_helped, early_help, focal_help_tick, decision_count,
 					  parse_failures, truncations, llm_call_count, recognized)
-					VALUES (:id, 'agent_society_v1', :scenario, :condition, :model, :seed, :pv, '0.1.0',
+					VALUES (:id, 'agent_society_v2', :scenario, :condition, :model, :seed, :pv, '0.1.0',
 					  :pilot, :t, :t, :h, :h, :tick, 10, 1, 0, 11, false)
 					""").param("id", UUID.randomUUID()).param("scenario", scenario).param("condition", condition)
 					.param("model", model).param("seed", i).param("pv", promptVersion).param("pilot", pilot)
@@ -73,12 +73,12 @@ class ResultsIT {
 
 	@Test
 	void ratesAndIntervalsCountOnlyStudyRuns() throws Exception {
-		seed("office", "alone", "llama-3.1-8b", false, "v1", 10, 9);
-		seed("office", "group5", "llama-3.1-8b", false, "v1", 10, 3);
+		seed("alert_fatigue", "calm", "llama-3.1-8b", false, "v2", 10, 9);
+		seed("alert_fatigue", "fatigue_6", "llama-3.1-8b", false, "v2", 10, 3);
 		// None of these may be counted:
-		seed("office", "alone", "llama-3.1-8b", true, "v1", 5, 0); // pilot
-		seed("office", "alone", "fake", false, "v1", 5, 0); // not a study model
-		seed("office", "alone", "llama-3.1-8b", false, "v0", 5, 0); // other prompt version
+		seed("alert_fatigue", "calm", "llama-3.1-8b", true, "v2", 5, 0); // pilot
+		seed("alert_fatigue", "calm", "fake", false, "v2", 5, 0); // not a study model
+		seed("alert_fatigue", "calm", "llama-3.1-8b", false, "v1", 5, 0); // other prompt version
 
 		double[] alone = WilsonInterval.of(9, 10);
 		double[] diff = NewcombeInterval.difference(3, 10, 9, 10);
@@ -86,36 +86,33 @@ class ResultsIT {
 		mvc.perform(get("/api/results")).andExpect(status().isOk())
 				.andExpect(jsonPath("$.scenarios", hasSize(2)))
 				.andExpect(jsonPath("$.traceLinks", hasSize(0)))
-				.andExpect(jsonPath("$.scenarios[0].scenario").value("town_square"))
-				.andExpect(jsonPath("$.scenarios[0].rows", hasSize(0)))
-				.andExpect(jsonPath("$.scenarios[0].baseline", hasSize(2))) // the Darley and Latane figures from application.yml
-				.andExpect(jsonPath("$.scenarios[0].baseline[0].condition").value("alone"))
-				.andExpect(jsonPath("$.scenarios[0].baseline[0].n").value(13))
-				.andExpect(jsonPath("$.scenarios[1].scenario").value("office"))
-				.andExpect(jsonPath("$.scenarios[1].rows", hasSize(2)))
-				.andExpect(jsonPath("$.scenarios[1].rows[0].condition").value("alone"))
-				.andExpect(jsonPath("$.scenarios[1].rows[0].n").value(10))
-				.andExpect(jsonPath("$.scenarios[1].rows[0].helped").value(9))
-				.andExpect(jsonPath("$.scenarios[1].rows[0].rate").value(0.9))
-				.andExpect(jsonPath("$.scenarios[1].rows[0].ciLow").value(near(alone[0], 1e-9)))
-				.andExpect(jsonPath("$.scenarios[1].rows[0].ciHigh").value(near(alone[1], 1e-9)))
-				.andExpect(jsonPath("$.scenarios[1].rows[0].earlyRate").value(0.9))
-				.andExpect(jsonPath("$.scenarios[1].rows[0].medianHelpTick").value(4.0))
-				.andExpect(jsonPath("$.scenarios[1].rows[0].parseFailureRate").value(0.1))
-				.andExpect(jsonPath("$.scenarios[1].rows[0].truncationRate").value(0.0))
-				.andExpect(jsonPath("$.scenarios[1].rows[0].recognitionRate").value(0.0))
-				.andExpect(jsonPath("$.scenarios[1].rows[1].condition").value("group5"))
-				.andExpect(jsonPath("$.scenarios[1].rows[1].rate").value(0.3))
-				.andExpect(jsonPath("$.scenarios[1].differences", hasSize(1)))
-				.andExpect(jsonPath("$.scenarios[1].differences[0].comparison").value("group5-alone"))
-				.andExpect(jsonPath("$.scenarios[1].differences[0].diff").value(near(-0.6, 1e-9)))
-				.andExpect(jsonPath("$.scenarios[1].differences[0].ciLow").value(near(diff[1], 1e-9)))
-				.andExpect(jsonPath("$.scenarios[1].differences[0].ciHigh").value(near(diff[2], 1e-9)));
+				.andExpect(jsonPath("$.scenarios[0].scenario").value("alert_fatigue"))
+				.andExpect(jsonPath("$.scenarios[1].scenario").value("triage_herding"))
+				.andExpect(jsonPath("$.scenarios[1].rows", hasSize(0)))
+				.andExpect(jsonPath("$.scenarios[0].rows", hasSize(2)))
+				.andExpect(jsonPath("$.scenarios[0].rows[0].condition").value("calm"))
+				.andExpect(jsonPath("$.scenarios[0].rows[0].n").value(10))
+				.andExpect(jsonPath("$.scenarios[0].rows[0].helped").value(9))
+				.andExpect(jsonPath("$.scenarios[0].rows[0].rate").value(0.9))
+				.andExpect(jsonPath("$.scenarios[0].rows[0].ciLow").value(near(alone[0], 1e-9)))
+				.andExpect(jsonPath("$.scenarios[0].rows[0].ciHigh").value(near(alone[1], 1e-9)))
+				.andExpect(jsonPath("$.scenarios[0].rows[0].earlyRate").value(0.9))
+				.andExpect(jsonPath("$.scenarios[0].rows[0].medianHelpTick").value(4.0))
+				.andExpect(jsonPath("$.scenarios[0].rows[0].parseFailureRate").value(0.1))
+				.andExpect(jsonPath("$.scenarios[0].rows[0].truncationRate").value(0.0))
+				.andExpect(jsonPath("$.scenarios[0].rows[0].recognitionRate").value(0.0))
+				.andExpect(jsonPath("$.scenarios[0].rows[1].condition").value("fatigue_6"))
+				.andExpect(jsonPath("$.scenarios[0].rows[1].rate").value(0.3))
+				.andExpect(jsonPath("$.scenarios[0].differences", hasSize(1)))
+				.andExpect(jsonPath("$.scenarios[0].differences[0].comparison").value("fatigue_6-calm"))
+				.andExpect(jsonPath("$.scenarios[0].differences[0].diff").value(near(-0.6, 1e-9)))
+				.andExpect(jsonPath("$.scenarios[0].differences[0].ciLow").value(near(diff[1], 1e-9)))
+				.andExpect(jsonPath("$.scenarios[0].differences[0].ciHigh").value(near(diff[2], 1e-9)));
 	}
 
 	@Test
 	void medianHelpTickIsNullWhenNobodyHelped() throws Exception {
-		seed("office", "group5", "gpt-oss-120b", false, "v1", 4, 0);
+		seed("triage_herding", "dismiss", "gpt-oss-120b", false, "v2", 4, 0);
 		mvc.perform(get("/api/results")).andExpect(status().isOk())
 				.andExpect(jsonPath("$.scenarios[1].rows[0].rate").value(0.0))
 				.andExpect(jsonPath("$.scenarios[1].rows[0].medianHelpTick").doesNotExist());

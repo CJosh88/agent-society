@@ -24,9 +24,9 @@ public record RunBundle(
 
 	public record RunInfo(
 			@JsonProperty("id") @NotNull UUID id,
-			@JsonProperty("experiment") @NotNull @Pattern(regexp = "agent_society_v1") String experiment,
-			@JsonProperty("scenario") @NotNull @Pattern(regexp = "town_square|office") String scenario,
-			@JsonProperty("condition") @NotNull @Pattern(regexp = "alone|group5|group5_owner") String condition,
+			@JsonProperty("experiment") @NotNull @Pattern(regexp = "agent_society_v2") String experiment,
+			@JsonProperty("scenario") @NotNull @Pattern(regexp = "alert_fatigue|triage_herding") String scenario,
+			@JsonProperty("condition") @NotNull @Pattern(regexp = "calm|fatigue_3|fatigue_6|alone|dismiss|endorse") String condition,
 			@JsonProperty("model") @NotBlank String model,
 			@JsonProperty("seed") @NotNull @Min(0) Long seed,
 			@JsonProperty("prompt_version") @NotBlank String promptVersion,
@@ -39,14 +39,14 @@ public record RunBundle(
 	public record AgentInfo(
 			@JsonProperty("agent_id") @NotBlank String agentId,
 			@JsonProperty("name") @NotBlank String name,
-			@JsonProperty("role") @NotNull @Pattern(regexp = "focal|scripted|victim") String role,
+			@JsonProperty("role") @NotNull @Pattern(regexp = "focal|scripted") String role,
 			@JsonProperty("persona") @NotNull Map<String, Object> persona) {
 	}
 
 	public record EventInfo(
 			@JsonProperty("seq") @NotNull @Min(0) Integer seq,
 			@JsonProperty("tick") @NotNull @Min(0) @Max(12) Integer tick,
-			@JsonProperty("type") @NotNull @Pattern(regexp = "AGENT_SPAWNED|PROBLEM_STARTED|AGENT_MOVED|AGENT_SAID|AGENT_WAITED|AGENT_APPROACHED|AGENT_CALLED|ACTION_PARSE_FAILED|PROBE_ANSWERED|RUN_ENDED") String type,
+			@JsonProperty("type") @NotNull @Pattern(regexp = "AGENT_SPAWNED|NOTICE_SHOWN|AGENT_SAID|AGENT_WAITED|AGENT_CALLED|AGENT_PRIORITY_SET|ACTION_PARSE_FAILED|PROBE_ANSWERED|RUN_ENDED") String type,
 			@JsonProperty("agent_id") String agentId,
 			@JsonProperty("payload") @NotNull Map<String, Object> payload) {
 	}

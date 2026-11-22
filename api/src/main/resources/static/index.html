@@ -29,8 +29,8 @@
       <label>Scenario
         <select name="scenario">
           <option value="">All</option>
-          <option value="town_square">Town square</option>
-          <option value="office">Office</option>
+          <option value="alert_fatigue">Alert fatigue</option>
+          <option value="triage_herding">Herding in triage</option>
         </select>
       </label>
       <label>Model
@@ -45,9 +45,12 @@
       <label>Condition
         <select name="condition">
           <option value="">All</option>
+          <option value="calm">Calm (no false alarms)</option>
+          <option value="fatigue_3">3 false alarms first</option>
+          <option value="fatigue_6">6 false alarms first</option>
           <option value="alone">Alone</option>
-          <option value="group5">Group of 5</option>
-          <option value="group5_owner">Group of 5 + owner</option>
+          <option value="dismiss">Colleagues say low</option>
+          <option value="endorse">Colleagues say high</option>
         </select>
       </label>
     </form>
@@ -57,16 +60,17 @@
 
   <section id="about">
     <h2>About</h2>
-    <p><strong>The question.</strong> When several people see a problem and nobody acts, each can assume
-      someone else will. This project asks whether an LLM agent does the same: one focal agent shares a scene
-      with four scripted people who never help, in a town square where a stranger collapses and in an office
-      where a payments dashboard turns red. A third condition names the agent as the owner of the problem.</p>
+    <p><strong>The question.</strong> Can the context an agent works in make it under-react to something that
+      matters? Two cases are tested, with one focal LLM agent in a small shop. <em>Alert fatigue:</em> after a
+      run of false alarms (none, three or six), does the on-call agent still escalate when a real payment alert
+      arrives? <em>Herding in triage:</em> when four colleagues have all called a serious ticket low priority
+      (or all high), does the agent follow them?</p>
     <p><strong>The design.</strong> Three models are compared with themselves across conditions, per scene,
       using 50 paired seeds per cell. The focal agent is told only that it is an ordinary afternoon, and its
-      options are neutral verbs, so nothing hints at the expected answer. A Python LangGraph engine plays the
+      options are generic, so nothing hints at the expected answer. A Python LangGraph engine plays the
       runs, a Spring Boot API stores every event and every raw model call, and this page replays them.</p>
     <p><strong>The limits.</strong> These are tendencies of language models in a toy scene, not evidence about
-      people or about any production system. The other four people are scripted, sampling uses provider
+      people or about any production system. The colleagues are scripted and never react to the agent, sampling uses provider
       defaults so reruns will differ, and smaller effects than a drop from about 90% to 60% are underpowered.</p>
     <p id="about-links" class="muted"></p>
   </section>

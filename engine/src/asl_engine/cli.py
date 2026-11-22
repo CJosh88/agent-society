@@ -16,7 +16,7 @@ from . import config
 from .analysis import build_report, fetch_runs
 from .budget import Budget
 from .client import post_bundle
-from .config import CONDITIONS, MODEL_REGISTRY, RESULTS_DIR, SCENARIOS, STUDY_MODELS
+from .config import MODEL_REGISTRY, RESULTS_DIR, SCENARIO_CONDITIONS, SCENARIOS, STUDY_MODELS
 from .graph import build_graph, run_one
 from .llm import LLMContext, get_model
 from .personas import write_personas
@@ -63,8 +63,8 @@ def run(
 ) -> None:
     """Play one run and post it to the API."""
     _check_model(model)
-    if scenario not in SCENARIOS or condition not in CONDITIONS:
-        raise typer.BadParameter(f"scenario must be one of {SCENARIOS}; condition one of {CONDITIONS}")
+    if scenario not in SCENARIOS or condition not in SCENARIO_CONDITIONS[scenario]:
+        raise typer.BadParameter(f"scenario must be one of {SCENARIOS}; conditions: {SCENARIO_CONDITIONS}")
     budget = Budget(config.max_usd())
 
     async def go() -> str:
@@ -88,7 +88,7 @@ def batch(
     keys = [m.strip() for m in models.split(",") if m.strip()]
     for k in keys:
         _check_model(k)
-    specs = [(m, s, c, seed + i) for m in keys for s in SCENARIOS for c in CONDITIONS for i in range(runs)]
+    specs = [(m, s, c, seed + i) for m in keys for s in SCENARIOS for c in SCENARIO_CONDITIONS[s] for i in range(runs)]
     random.Random(seed).shuffle(specs)
     budget = Budget(config.max_usd())
     skipped = asyncio.run(_batch(specs, pilot, budget))

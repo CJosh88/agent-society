@@ -13,14 +13,14 @@ graph TD;
 	finish(finish)
 	__end__([<p>__end__</p>]):::last
 	__start__ --> setup;
-	focal_turn\3a__end__ --> scripted_turns;
+	focal_turn\3a__end__ --> resolve;
 	probe --> finish;
 	resolve -.-> probe;
 	resolve -.-> tick_start;
-	scripted_turns --> resolve;
+	scripted_turns -.-> focal_turn\3aperceive;
+	scripted_turns -.-> resolve;
 	setup --> tick_start;
-	tick_start -.-> focal_turn\3aperceive;
-	tick_start -.-> scripted_turns;
+	tick_start --> scripted_turns;
 	finish --> __end__;
 	subgraph focal_turn
 	focal_turn\3aperceive(perceive)

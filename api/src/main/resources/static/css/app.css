@@ -41,7 +41,6 @@ th, td { border: 1px solid var(--line); padding: 6px 9px; text-align: right; whi
 th:first-child, td:first-child, th.left, td.left { text-align: left; }
 thead th { background: #f0eee8; }
 tr.diff td, tr.diff th { background: #f7f5ef; }
-tr.baseline td, tr.baseline th { font-style: italic; background: #fdfcf9; }
 td.num-good { color: var(--good); }
 td.num-bad { color: var(--bad); }
 

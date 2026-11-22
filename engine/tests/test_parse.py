@@ -12,14 +12,14 @@ def test_json_inside_prose_and_code_fence():
 
 
 def test_takes_the_last_valid_candidate():
-    text = '{"action": "WAIT"} then I changed my mind {"action": "APPROACH", "target_id": "victim"}'
+    text = '{"action": "WAIT"} then I changed my mind {"action": "SET_PRIORITY", "priority": "HIGH"}'
     a = extract_action(text)
-    assert a.action == "APPROACH" and a.target_id == "victim"
+    assert a.action == "SET_PRIORITY" and a.priority == "HIGH"
 
 
 def test_last_candidate_that_is_invalid_does_not_hide_an_earlier_valid_one():
-    text = '{"action": "MOVE", "target_location": "cafe"} and also {"action": "DANCE"}'
-    assert extract_action(text).action == "MOVE"
+    text = '{"action": "CALL", "text": "Manager, help"} and also {"action": "DANCE"}'
+    assert extract_action(text).action == "CALL"
 
 
 def test_no_json_or_truncated_json_gives_none():

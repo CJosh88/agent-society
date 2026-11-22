@@ -24,8 +24,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/runs")
 class RunController {
 
-	private static final Set<String> SCENARIOS = Set.of("town_square", "office");
-	private static final Set<String> CONDITIONS = Set.of("alone", "group5", "group5_owner");
+	private static final Set<String> SCENARIOS = Set.of("alert_fatigue", "triage_herding");
+	private static final Set<String> CONDITIONS = Set.of("calm", "fatigue_3", "fatigue_6", "alone", "dismiss", "endorse");
 	private static final int MAX_PAGE_SIZE = 100;
 
 	private final RunRepository runs;

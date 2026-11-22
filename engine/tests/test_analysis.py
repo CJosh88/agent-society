@@ -56,39 +56,39 @@ def cell(scenario, model, condition, helped, n=50, **kw):
 def sample():
     runs = []
     for model in ("m1", "m2"):
-        runs += cell("office", model, "alone", 44) + cell("office", model, "group5", 15)
-        runs += cell("office", model, "group5_owner", 40)
+        runs += cell("alert_fatigue", model, "calm", 44) + cell("alert_fatigue", model, "fatigue_6", 15)
+        runs += cell("alert_fatigue", model, "fatigue_3", 30)
     return runs
 
 
 def test_study_runs_drop_pilots_and_other_models():
-    runs = [run("office", "m1", "alone", 0, True), run("office", "m1", "alone", 1, True, pilot=True),
-            run("office", "fake", "alone", 2, True)]
+    runs = [run("alert_fatigue", "m1", "calm", 0, True), run("alert_fatigue", "m1", "calm", 1, True, pilot=True),
+            run("alert_fatigue", "fake", "calm", 2, True)]
     assert [r["seed"] for r in study_runs(runs, ["m1"])] == [0]
 
 
 def test_run_tests_per_model_and_scenario_with_holm_over_all():
     rows = run_tests(sample(), ["m1", "m2"])
-    assert len(rows) == 4  # office only: 2 models x (H1, H2)
+    assert len(rows) == 2  # alert_fatigue only: 2 models x H1
     h1 = next(r for r in rows if r["hypothesis"] == "H1" and r["model"] == "m1")
     assert (h1["x_hi"], h1["x_lo"], h1["n_hi"]) == (44, 15, 50)
     assert h1["p"] == pytest.approx(fisher_greater(44, 50, 15, 50))
     assert h1["p"] < 1e-6 and h1["p_holm"] < 0.001
     assert all(r["p_holm"] >= r["p"] for r in rows)
-    assert h1["mcnemar_b"] == 29 and h1["mcnemar_c"] == 0  # seeds 15..43 helped alone but not in the group
+    assert h1["mcnemar_b"] == 29 and h1["mcnemar_c"] == 0  # seeds 15..43 escalated when calm but not after 6 false alarms
 
 
 def test_tests_need_both_conditions():
-    assert run_tests(cell("office", "m1", "alone", 30), ["m1"]) == []
+    assert run_tests(cell("alert_fatigue", "m1", "calm", 30), ["m1"]) == []
 
 
 def test_report_contains_cells_differences_tests_and_sensitivity():
     text = build_report(sample(), ["m1", "m2"])
-    assert "### m1" in text and "### m2" in text and "## town_square" in text
-    assert "| alone | 50 | 88% (76–94) |" in text
-    assert "| group5 | 50 | 30% (19–44) |" in text
-    assert "group5 − alone: −58 pp" in text and "group5_owner − group5: +50 pp" in text
-    assert "## H1 and H2" in text and "Fisher p (one-sided)" in text and "Holm p" in text
+    assert "### m1" in text and "### m2" in text and "## alert_fatigue" in text
+    assert "| calm | 50 | 88% (76–94) |" in text
+    assert "| fatigue_6 | 50 | 30% (19–44) |" in text
+    assert "fatigue_6 − calm: −58 pp" in text and "fatigue_3 − calm: −28 pp" in text
+    assert "## H1 (alert fatigue) and H2 (herding)" in text and "Fisher p (one-sided)" in text and "Holm p" in text
     assert "Without runs that had a parse failure or truncation (0 removed)" in text
     assert "recognised (0 removed)" in text
 
@@ -108,3 +108,15 @@ def test_report_is_the_same_for_the_same_data_and_never_pools_models():
     assert a.count("### m1") == 1
     only_m1 = build_report([r for r in sample() if r["model"] == "m1"], ["m1"])
     assert "### m2" not in only_m1
+
+
+def test_h2_compares_alone_with_dismiss_and_holm_runs_over_both_scenarios():
+    runs = sample() + cell("triage_herding", "m1", "alone", 45) + cell("triage_herding", "m1", "dismiss", 20)
+    rows = run_tests(runs, ["m1", "m2"])
+    assert [(r["scenario"], r["hypothesis"], r["hi"], r["lo"]) for r in rows] == [
+        ("alert_fatigue", "H1", "calm", "fatigue_6"), ("alert_fatigue", "H1", "calm", "fatigue_6"),
+        ("triage_herding", "H2", "alone", "dismiss")]
+    h2 = rows[-1]
+    assert (h2["x_hi"], h2["x_lo"]) == (45, 20) and h2["p_holm"] >= h2["p"]
+    text = build_report(runs, ["m1", "m2"])
+    assert "## triage_herding" in text and "dismiss − alone: −50 pp" in text

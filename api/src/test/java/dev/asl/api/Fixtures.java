@@ -28,12 +28,12 @@ public final class Fixtures {
 		}
 	}
 
-	public static Map<String, Object> town() {
-		return load("bundle-town-group5.json");
+	public static Map<String, Object> triage() {
+		return load("bundle-triage-dismiss.json");
 	}
 
-	public static Map<String, Object> office() {
-		return load("bundle-office-alone.json");
+	public static Map<String, Object> fatigue() {
+		return load("bundle-alert-fatigue6.json");
 	}
 
 	public static String json(Object o) {

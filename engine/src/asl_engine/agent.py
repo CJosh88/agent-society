@@ -30,7 +30,7 @@ class TurnState(TypedDict, total=False):
 def perceive(state: TurnState) -> dict[str, Any]:
     v = state["view"]
     system = scenarios.system_prompt(
-        v["scenario"], v["condition"], Persona.model_validate(v["persona"]), [tuple(o) for o in v["others"]]
+        v["scenario"], v["condition"], Persona.model_validate(v["persona"]), v["others"]
     )
     return {
         "system": system,
@@ -45,13 +45,13 @@ def perceive(state: TurnState) -> dict[str, Any]:
 
 
 def semantic_error(action, view: dict) -> str | None:
-    """None if the action is usable in this scene, otherwise the message shown to the model."""
-    if action.action == "MOVE" and action.target_location not in view["valid_locations"]:
-        return f"target_location {action.target_location!r} is not one of: {', '.join(view['valid_locations'])}"
-    if action.action == "APPROACH" and action.target_id not in view["valid_targets"]:
-        return f"target_id {action.target_id!r} is not in the You can see list"
+    """None if the action is usable in this scenario, otherwise the message shown to the model."""
+    if action.action not in view["valid_actions"]:
+        return f"action {action.action!r} is not one of: {', '.join(view['valid_actions'])}"
     if action.action in ("SAY", "CALL") and not (action.text or "").strip():
         return f"{action.action} needs non-empty text"
+    if action.action == "SET_PRIORITY" and action.priority is None:
+        return "SET_PRIORITY needs priority set to HIGH or LOW"
     return None
 
 

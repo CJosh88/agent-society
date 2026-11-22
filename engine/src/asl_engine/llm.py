@@ -18,7 +18,7 @@ from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.outputs import ChatGeneration, ChatResult
 from tenacity import AsyncRetrying, retry_if_exception, stop_after_attempt, wait_exponential
 
-from . import scenarios
+from . import scenarios, scripts
 from .budget import Budget
 from .config import (
     CLIENT_MAX_RETRIES,
@@ -27,7 +27,6 @@ from .config import (
     MODEL_REGISTRY,
     cf_base_url,
 )
-from .world import SCENES
 
 # Waits 1, 4 and 16 seconds between the 3 retries. Tests replace this with wait_none().
 RETRY_WAIT = wait_exponential(multiplier=1, exp_base=4)
@@ -46,9 +45,12 @@ class LlmResult:
 
 # --- Fake model -------------------------------------------------------------------------------
 
-HELP_PROBABILITY = {"alone": 0.30, "group5": 0.08, "group5_owner": 0.25}
+# Chance per tick that the fake model does the outcome action once it is on the table.
+ESCALATE_PROBABILITY = {"calm": 0.80, "fatigue_3": 0.55, "fatigue_6": 0.35}  # a call once the real alert shows
+FALSE_CALL_PROBABILITY = 0.04  # a call during the false alarms
+PRIORITY_PROBABILITY = 0.5  # a priority is set on a given tick after the ticket arrives
+HIGH_PROBABILITY = {"alone": 0.85, "dismiss": 0.30, "endorse": 0.95}
 MALFORMED_PROBABILITY = 0.05
-FOLLOW_UP_PROBABILITY = 0.85  # after approaching the problem target, the fake model speaks on the next turn
 
 
 class FakeScriptedChatModel(BaseChatModel):
@@ -80,32 +82,29 @@ class FakeScriptedChatModel(BaseChatModel):
         digest = hashlib.sha256(f"{self.run_seed}|focal|{tick}|{attempt}|{prompt}".encode()).digest()
         rng = random.Random(int.from_bytes(digest[:8], "big"))
 
-        scenario = "town_square" if scenarios.SCENE_LINES["town_square"] in prompt else "office"
-        if scenarios.ALONE_LINES[scenario] in prompt:
-            condition = "alone"
-        elif scenarios.OWNER_LINES[scenario] in prompt:
-            condition = "group5_owner"
-        else:
-            condition = "group5"
-        problem = scenarios.PROBLEM_LINES[scenario] in prompt
-        scene = SCENES[scenario]
-
+        scenario = "alert_fatigue" if scenarios.SCENE_LINES["alert_fatigue"] in prompt else "triage_herding"
         if rng.random() < MALFORMED_PROBABILITY:
             return 'Let me think about this. {"action": '
-        last = re.search(r"Your last actions: (.*)", prompt)
-        if problem and last and last.group(1).split("; ")[-1] == f"APPROACH {scene.target_id}" and rng.random() < FOLLOW_UP_PROBABILITY:
-            return '{"action": "SAY", "text": "Are you all right? Somebody help here.", "thought": "I should say something."}'
-        if problem and rng.random() < HELP_PROBABILITY[condition]:
-            if rng.random() < 0.5:
-                return f'{{"action": "APPROACH", "target_id": "{scene.target_id}", "thought": "I should go and check."}}'
-            return '{"action": "CALL", "text": "Please send help here, something is wrong.", "thought": "I need to tell someone."}'
-        r = rng.random()
-        if r < 0.70:
-            return '{"action": "WAIT", "thought": "Nothing to do right now."}'
-        if r < 0.85:
-            place = rng.choice(list(scene.locations))
-            return f'{{"action": "MOVE", "target_location": "{place}", "thought": "I will walk over."}}'
-        return '{"action": "SAY", "text": "Quite a day.", "thought": "Just making conversation."}'
+
+        if scenario == "alert_fatigue":
+            if scenarios.REAL_ALERT in prompt:
+                condition = {0: "calm", 3: "fatigue_3"}.get(prompt.count(scenarios.FALSE_SUFFIX), "fatigue_6")
+                if rng.random() < ESCALATE_PROBABILITY[condition]:
+                    return '{"action": "CALL", "text": "Payment provider support, card payments are failing.", "thought": "This one is still firing."}'
+            elif scenarios.FALSE_SUFFIX in prompt and rng.random() < FALSE_CALL_PROBABILITY:
+                return '{"action": "CALL", "text": "Manager, an alert fired, please look.", "thought": "Better safe than sorry."}'
+            return '{"action": "WAIT", "thought": "Nothing needs me yet."}'
+
+        if scenarios.ALONE_LINE in prompt:
+            condition = "alone"
+        else:
+            condition = "dismiss" if scripts.COMMENTS["dismiss"][0] in prompt else "endorse"
+        if scenarios.TICKET in prompt and rng.random() < PRIORITY_PROBABILITY:
+            high = rng.random() < HIGH_PROBABILITY[condition]
+            return f'{{"action": "SET_PRIORITY", "priority": "{"HIGH" if high else "LOW"}", "thought": "That is my call."}}'
+        if scenarios.TICKET in prompt and rng.random() < 0.10:
+            return '{"action": "SAY", "text": "Let me look at this one.", "thought": "Just making conversation."}'
+        return '{"action": "WAIT", "thought": "Nothing to do right now."}'
 
 
 # --- Real models ------------------------------------------------------------------------------
