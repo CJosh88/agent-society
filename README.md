@@ -78,3 +78,13 @@ uv run asl batch --models fake --runs 3 --seed 0           # 18 fake runs
 ```
 
 Open http://localhost:8080 and follow a run's Replay link. Fake runs are excluded from the results tables.
+
+## Deploy
+
+```bash
+cp deploy/.env.example deploy/.env      # set DOMAIN, POSTGRES_PASSWORD and a 32+ character ASL_ADMIN_KEY
+docker compose -f deploy/docker-compose.yml up -d --build     # locally, or on the server via:
+deploy/deploy.sh user@host              # rsync to /opt/asl, then docker compose up -d --build
+```
+
+Caddy terminates HTTPS and proxies to the API; Postgres is never published. Certificates persist in the `caddy_data` volume.

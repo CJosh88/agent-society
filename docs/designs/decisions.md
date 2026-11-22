@@ -56,3 +56,9 @@ Choices the design doc leaves open, and files added beyond its Target files tabl
 - McNemar is one-sided in the hypothesised direction, using shared seeds only.
 - The human baseline is not in `results.md`; it is on the website table (from `asl.baseline`).
 - `docs/writeup.md` is a skeleton with headings only. The operator writes it.
+
+## M5 (deploy)
+
+- `api/.dockerignore` (added): keeps `target/` out of the Docker build context.
+- `deploy/.env.example` ships working local defaults (`DOMAIN=localhost`, `POSTGRES_PASSWORD=asl`, the dev admin key) so the doc's `cp` then `up` check works. Change both secrets for a real server.
+- `deploy/deploy.sh` takes `user@host` as its argument and rsyncs everything except `.git`, `target`, `.venv`, `results` and `node_modules`, so `deploy/.env` travels with it. It has not been run against a real server.
