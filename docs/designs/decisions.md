@@ -66,3 +66,9 @@ Choices the design doc leaves open, and files added beyond its Target files tabl
 ## Environment file
 
 - `engine/.env` (git-ignored) is loaded by the `asl` command at startup via `python-dotenv`. Variables already set in the shell take priority. `engine/.env.example` (added) lists every variable, with `LANGSMITH_PROJECT=agent-society-lab` so traces go to the project the doc names.
+
+## OVH VPS (design doc update)
+
+- The design doc now names an OVHcloud VPS-1 (x86, Ubuntu 26.04, login `ubuntu`) instead of Hetzner. No OVH API keys are used: `deploy/deploy.sh` goes over SSH.
+- `deploy/deploy.sh` now creates `/opt/asl` and gives it to the login user with sudo before the rsync, because `ubuntu` cannot create a directory under `/opt`. The login user must also be in the `docker` group on the server.
+- `docs/designs/design.md` was re-copied from the updated doc.

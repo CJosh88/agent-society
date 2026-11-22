@@ -555,19 +555,21 @@ The milestones run in order, and each ends with commands Claude Code runs itself
 
 ## Deployment and budget
 
-The first month costs about $18. After that, about $7.50 a month for the VPS alone, because the experiment's tokens are a one-off cost.
+The first month costs about $15.50. After that it's $5.35 a month before tax, for the VPS alone, because the experiment's tokens are a one-off cost.
 
 | Item | Month 1 (USD) | Later months (USD) | Notes |
 | --- | --- | --- | --- |
-| Hetzner CAX11 (2 vCPU ARM, 4 GB) plus IPv4 | about 7.50 | about 7.50 | €5.99 plus about €0.50 for IPv4, before VAT. Check the plan is available when ordering. |
+| OVHcloud VPS-1 2027 (2 vCores, 4 GB, 40 GB NVMe), no commitment | 5.35 | 5.35 | Before tax. A dedicated IPv4 address, unlimited traffic and a daily backup are included. Choose a European data centre if one is offered. |
 | Cloudflare Workers Paid | 5.00 | 0 | gpt-oss usage goes past the free 10,000 neurons a day; cancel after the batch |
 | Tokens for 900 runs plus pilots (estimate) | about 5 | 0 | Llama about $0.90, gpt-oss about $2.55, Haiku about $0.90, plus about 10% for probes and retries |
 | Domain | 0 | 0 | `<ip-with-dashes>.sslip.io` works with Caddy's automatic HTTPS, or use a domain you own |
-| **Total** | **about 18** | **about 7.50** |  |
+| **Total** | **about 15.50** | **5.35** |  |
 
 The token estimate assumes one LLM agent, 12 decisions per run, about 1,500 input and 80 output tokens per decision, and gpt-oss output tripled for reasoning. Run the batch with `ASL_MAX_USD=8`.
 
-**Deploy** (`deploy/deploy.sh`): rsync the repo to `/opt/asl`, copy `deploy/.env`, then run `docker compose -f deploy/docker-compose.yml up -d --build`. Postgres is never published, and certificates persist in `caddy_data`. The API runs with `-XX:MaxRAMPercentage=60`.
+**Server setup:** Ubuntu 26.04 on x86. The default login is `ubuntu`, with an SSH key only. Install Docker Engine and the Compose plugin. Allow only ports 22, 80 and 443 inbound, using OVH's Network Firewall or `ufw`. Postgres is never published.
+
+**Deploy** (`deploy/deploy.sh`): rsync the repo to `/opt/asl`, copy `deploy/.env`, then run `docker compose -f deploy/docker-compose.yml up -d --build`. Certificates persist in `caddy_data`. The API runs with `-XX:MaxRAMPercentage=60`.
 
 **Human-only checklist**
 
@@ -578,11 +580,13 @@ The token estimate assumes one LLM agent, 12 decisions per run, about 1,500 inpu
 - [ ] Anthropic: create an API key and set a monthly spend limit in the Claude Console.
 - [ ] LangSmith: create a free account and set `LANGSMITH_API_KEY` and `LANGSMITH_TRACING=true` for the batch.
 - [ ] Run the M4 pilots, then push the signed tag: `git tag -s prereg-v1 && git push origin prereg-v1`.
-- [ ] Order the VPS, install Docker, fill in `deploy/.env` with a 32+ character admin key, and run `deploy/deploy.sh`.
+- [ ] Order OVHcloud VPS-1 (no commitment, Ubuntu 26.04, a European data centre if offered) with your SSH key. Install Docker and set the firewall.
+- [ ] Fill in `deploy/.env` with a 32+ character admin key and your sslip.io or own domain, then run `deploy/deploy.sh`.
 - [ ] Run the batch: `ASL_MAX_USD=8 uv run asl batch --models llama-3.1-8b,gpt-oss-120b,claude-haiku-5-5 --runs 50 --seed 0`.
 - [ ] Run `uv run asl analyze` and commit `results/`.
 - [ ] Spot-check thoughts in about 10 runs. Pick 2–4 featured runs and make 2–3 traces public, then set `asl.featured-run-ids` and `asl.trace-links`.
 - [ ] Write `docs/writeup.md` (about 800 words) and record a replay GIF for the README.
+- [ ] Check the first OVH invoice to see whether the backup promotion ends.
 
 ## Risks and open questions
 
@@ -599,7 +603,7 @@ Each open question has a default that applies if nobody answers it before handof
 | Spring Boot 4 API changes trip up the implementer | M1 slips | The project comes from Initializr; the blocker rule applies |
 | Human baseline figures are wrong | An embarrassing comparison | The checklist verifies them; the eventual-rate fields stay null and hidden until filled |
 | An unsuitable thought appears publicly | A reputational problem | A thoughts toggle, a spot-check of about 10 runs, and featured runs chosen by hand |
-| Spring runs short of memory on a 4 GB ARM VPS | The API crashes | `MaxRAMPercentage=60`; Postgres stays at its defaults |
+| Spring runs short of memory on the 4 GB VPS | The API crashes | `MaxRAMPercentage=60`; Postgres stays at its defaults |
 
 **Open questions**
 
@@ -629,3 +633,4 @@ v0.2 (2026-11-22) adds six Goldfish reviews, each run in a fresh session that sa
 | Dev compose file in M1, local defaults, CI in M1, healthchecks, Caddy volumes, forwarded headers | M2 depended on an M6 file; deploy pitfalls | Spring, Readiness, Zoom-out |
 | Persona check and Ollama postponed; featured runs and a write-up added | Effort that served no hypothesis; what recruiters actually read | Zoom-out, Research method |
 | "Reproducibility" renamed "Auditability" | Default sampling cannot be reproduced | Zoom-out, Engine |
+| OVHcloud VPS-1 instead of Hetzner CAX11; month 1 about $15.50 | All of Hetzner's cost-optimised plans are unavailable to order | Operator |
