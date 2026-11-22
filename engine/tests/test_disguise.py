@@ -1,4 +1,4 @@
-"""Rendered prompts must never contain the banned words. Only the recognition probe is exempt."""
+"""Rendered prompts must never contain the banned words. The recognition probe question is checked too."""
 
 import pytest
 
@@ -37,14 +37,15 @@ def test_no_banned_word_in_any_rendered_prompt(scenario, condition):
 @pytest.mark.parametrize("scenario", SCENARIOS)
 def test_scripted_lines_and_fixed_text_are_clean(scenario):
     texts = [scenarios.SCENE_LINES[scenario], scenarios.ALONE_LINES[scenario], scenarios.OWNER_LINES[scenario],
-             scenarios.PROBLEM_LINES[scenario], scenarios.action_menu(scenario)]
+             scenarios.PROBLEM_LINES[scenario], scenarios.action_menu(scenario), scenarios.PROBE_QUESTION]
     texts += [a.arg for t in range(1, 13) for a in scripted_actions(scenario, t)]
     for t in texts:
         assert not scenarios.BANNED_WORDS.search(t), t
 
 
-def test_the_probe_is_the_only_exempt_prompt():
-    assert scenarios.BANNED_WORDS.search(scenarios.PROBE_QUESTION)
+def test_the_probe_question_does_not_hint_at_studies():
+    assert not scenarios.BANNED_WORDS.search(scenarios.PROBE_QUESTION)
+    assert "study" not in scenarios.PROBE_QUESTION.lower() and "story" not in scenarios.PROBE_QUESTION.lower()
 
 
 @pytest.mark.parametrize("word", ["experiment", "Study", "TEST", "simulation", "psychology", "bystander",

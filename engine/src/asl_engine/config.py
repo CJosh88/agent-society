@@ -47,7 +47,7 @@ class ModelSpec:
 MODEL_REGISTRY: dict[str, ModelSpec] = {
     "fake": ModelSpec("fake", "fake", "fake", 0.0, 0.0, ()),
     "llama-3.1-8b": ModelSpec(
-        "llama-3.1-8b", "workers_ai", "@cf/meta/llama-3.1-8b-instruct-fp8", 0.152, 0.287,
+        "llama-3.1-8b", "workers_ai", "@cf/meta/llama-3.1-8b-instruct-fast", 0.152, 0.287,
         ("CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID"),
     ),
     "gpt-oss-120b": ModelSpec(

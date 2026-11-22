@@ -1,7 +1,7 @@
 """Frozen prompt text (PROMPT_VERSION v1). Do not tune after the prereg-v1 tag.
 
 Rendered prompts must never contain the whole words experiment, study, test, simulation, psychology,
-bystander, diffusion, Darley, Latane or Genovese. Only PROBE_QUESTION is exempt.
+bystander, diffusion, Darley, Latane or Genovese. PROBE_QUESTION is checked too; there is no exemption.
 """
 
 from __future__ import annotations
@@ -37,11 +37,10 @@ STRANGER = "a stranger"
 TOWN_GROUP_TAIL = "and a stranger sitting by the fountain"
 
 PROBE_QUESTION = (
-    "One last question, outside the scene: does this situation remind you of any well-known study, "
-    "story or scenario? Answer in one sentence."
+    "One last question, outside the scene: in a sentence or two, what do you think was going on here?"
 )
 
-# Whole words, case-insensitive. The disguise test applies this to every rendered prompt except the probe.
+# Whole words, case-insensitive. The disguise test applies this to every rendered prompt, the probe question included.
 BANNED_WORDS = re.compile(
     r"\b(experiment|study|test|simulation|psychology|bystander|diffusion|darley|latan[eé]|genovese)\b", re.IGNORECASE
 )

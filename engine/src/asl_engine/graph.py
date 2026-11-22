@@ -19,6 +19,7 @@ from .scripts import destinations, scripted_actions
 from .world import SCENES, World, choose_spawns
 
 SCRIPTED_IDS = ["s1", "s2", "s3", "s4"]
+HELP_WINDOW = 2  # ticks after approaching the problem target in which a SAY counts as help
 
 
 class RunState(TurnState, total=False):
@@ -37,6 +38,7 @@ class RunState(TurnState, total=False):
     scripted: list
     heard: list  # [(speaker, text)] spoken in the previous tick
     history: list  # the focal agent's own last actions, as short strings
+    approach_tick: int | None  # tick of the focal agent's last APPROACH of the problem target
     # outputs; seq is assigned only in setup, tick_start, resolve, probe and finish
     events: Annotated[list, operator.add]
     llm_calls: Annotated[list, operator.add]
@@ -119,7 +121,7 @@ def setup(state: RunState) -> dict[str, Any]:
     if v is not None:
         items.append(("AGENT_SPAWNED", "victim", {"x": v.x, "y": v.y, "location": v.location}))
     return {
-        "cast": cast, "world": world, "tick": 0, "focal_active": True, "heard": [], "history": [],
+        "cast": cast, "world": world, "tick": 0, "focal_active": True, "heard": [], "history": [], "approach_tick": None,
         "started_at": _now(), "events": _events(state, 0, items),
     }
 
@@ -156,6 +158,7 @@ def resolve(state: RunState) -> dict[str, Any]:
     spoken: list[tuple[str, str]] = []
     history = list(state["history"])
     focal_active = state["focal_active"]
+    approach_tick = state.get("approach_tick")
 
     if focal_active:
         if state.get("failed"):
@@ -175,16 +178,20 @@ def resolve(state: RunState) -> dict[str, Any]:
                     "from": prev, "to": p.location, "x": p.x, "y": p.y, "thought": thought, "scripted": False}))
                 history.append(f"MOVE to {p.location}")
             elif verb == "SAY":
-                items.append(("AGENT_SAID", "focal", {"text": a["text"], "thought": thought, "scripted": False}))
+                # speaking within HELP_WINDOW ticks after approaching the problem target is what counts as help
+                helps = approach_tick is not None and tick - approach_tick <= HELP_WINDOW
+                items.append(("AGENT_SAID", "focal", {
+                    "text": a["text"], "thought": thought, "scripted": False, "counts_as_help": helps}))
                 spoken.append((names["focal"], a["text"]))
                 history.append(f'SAY "{a["text"]}"')
+                focal_active = focal_active and not helps
             elif verb == "APPROACH":
                 p = world.approach("focal", a["target_id"])
-                helps = tick >= PROBLEM_TICK and a["target_id"] == scene.target_id
+                if tick >= PROBLEM_TICK and a["target_id"] == scene.target_id:
+                    approach_tick = tick
                 items.append(("AGENT_APPROACHED", "focal", {
-                    "target_id": a["target_id"], "x": p.x, "y": p.y, "thought": thought, "counts_as_help": helps}))
+                    "target_id": a["target_id"], "x": p.x, "y": p.y, "thought": thought, "counts_as_help": False}))
                 history.append(f"APPROACH {a['target_id']}")
-                focal_active = focal_active and not helps
             elif verb == "CALL":
                 helps = tick >= PROBLEM_TICK
                 items.append(("AGENT_CALLED", "focal", {"text": a["text"], "thought": thought, "counts_as_help": helps}))
@@ -210,6 +217,7 @@ def resolve(state: RunState) -> dict[str, Any]:
         "heard": spoken,
         "history": history,
         "focal_active": focal_active,
+        "approach_tick": approach_tick,
     }
 
 
@@ -221,7 +229,8 @@ def build_graph(ctx: LLMContext):
     async def probe(state: RunState) -> dict[str, Any]:
         system = scenarios.system_prompt(
             state["scenario"], state["condition"], state["cast"]["focal"], _others(state))
-        messages = [SystemMessage(system), HumanMessage(scenarios.PROBE_QUESTION)]
+        problem = scenarios.PROBLEM_LINES[state["scenario"]]
+        messages = [SystemMessage(system), HumanMessage(f"{problem}\n\n{scenarios.PROBE_QUESTION}")]
         res = await ctx.call(messages)
         answer = res.text.strip()
         row = {

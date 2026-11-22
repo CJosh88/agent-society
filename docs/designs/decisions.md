@@ -72,3 +72,15 @@ Choices the design doc leaves open, and files added beyond its Target files tabl
 - The design doc now names an OVHcloud VPS-1 (x86, Ubuntu 26.04, login `ubuntu`) instead of Hetzner. No OVH API keys are used: `deploy/deploy.sh` goes over SSH.
 - `deploy/deploy.sh` now creates `/opt/asl` and gives it to the login user with sudo before the rsync, because `ubuntu` cannot create a directory under `/opt`. The login user must also be in the `docker` group on the server.
 - `docs/designs/design.md` was re-copied from the updated doc.
+
+## Llama model ID (2026-11-22)
+
+- `@cf/meta/llama-3.1-8b-instruct-fp8` now returns HTTP 410 Gone on Workers AI. Switched the `llama-3.1-8b` key to `@cf/meta/llama-3.1-8b-instruct-fast` (same Llama 3.1 8B model, still served). Model key, prompts and `PROMPT_VERSION` are unchanged. Prices in `config.py` are still the old fp8 figures; check them before a budgeted batch.
+
+## Help rule and recognition probe (after the first pilots, before `prereg-v1`)
+
+- **Help now needs engagement.** A focal `CALL` at tick 3 or later still counts. An `APPROACH` of the problem target no longer counts by itself: a focal `SAY` within two ticks after it does, and that `SAY` carries `counts_as_help`. Reason: walking over could be curiosity. `HELP_WINDOW = 2` in `graph.py`; the game master keeps `approach_tick` in `RunState`.
+- **Effects:** `AGENT_APPROACHED.counts_as_help` is always false. The schema allows an optional `counts_as_help` on `AGENT_SAID` (focal events always carry it). An agent that approaches stays active until it helps, so the pilots' help ticks run about one tick later than under the old rule. The town fixture now ends with a focal `SAY` at tick 8 that counts as help, and `RunIngestIT` expects 23 events and a help tick of 8.
+- **Fake model:** on the turn after an `APPROACH` of the problem target it says something with probability 0.85 (`FOLLOW_UP_PROBABILITY`).
+- **Probe question:** now *"One last question, outside the scene: in a sentence or two, what do you think was going on here?"* The old wording named "any well-known study", which led models to answer with a psychology experiment. The probe message also starts with the scenario's problem line, because the probe sees only the system prompt and would otherwise have nothing to describe. The question has no banned words, so it is now covered by the disguise test, with no exemption. `recognized` keeps the same matcher.
+- Pilots run before this change used the old probe and the old help rule. Delete or ignore them; none of them are study runs.

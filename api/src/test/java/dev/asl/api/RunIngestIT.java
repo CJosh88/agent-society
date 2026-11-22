@@ -57,7 +57,7 @@ class RunIngestIT {
 
 		mvc.perform(get("/api/runs/" + TOWN_ID)).andExpect(status().isOk())
 				.andExpect(jsonPath("$.run.focalHelped").value(true))
-				.andExpect(jsonPath("$.run.focalHelpTick").value(7))
+				.andExpect(jsonPath("$.run.focalHelpTick").value(8))
 				.andExpect(jsonPath("$.run.earlyHelp").value(false))
 				.andExpect(jsonPath("$.run.recognized").value(false))
 				.andExpect(jsonPath("$.run.promptVersion").value("v1"))
@@ -70,7 +70,7 @@ class RunIngestIT {
 
 		Integer decisions = jdbc.sql("SELECT decision_count FROM runs WHERE id = ?").param(UUID.fromString(TOWN_ID))
 				.query(Integer.class).single();
-		org.assertj.core.api.Assertions.assertThat(decisions).isEqualTo(7);
+		org.assertj.core.api.Assertions.assertThat(decisions).isEqualTo(8);
 	}
 
 	@Test
@@ -94,12 +94,15 @@ class RunIngestIT {
 	void eventsComeBackOrderedWithPayloadUnchanged() throws Exception {
 		submit(Fixtures.town()).andExpect(status().isCreated());
 		mvc.perform(get("/api/runs/" + TOWN_ID + "/events")).andExpect(status().isOk())
-				.andExpect(jsonPath("$", hasSize(22))).andExpect(jsonPath("$[0].seq").value(0))
+				.andExpect(jsonPath("$", hasSize(23))).andExpect(jsonPath("$[0].seq").value(0))
 				.andExpect(jsonPath("$[16].type").value("AGENT_APPROACHED"))
 				.andExpect(jsonPath("$[16].agentId").value("focal"))
-				.andExpect(jsonPath("$[16].payload.counts_as_help").value(true))
-				.andExpect(jsonPath("$[21].type").value("RUN_ENDED"))
-				.andExpect(jsonPath("$[21].agentId").doesNotExist());
+				.andExpect(jsonPath("$[16].payload.counts_as_help").value(false))
+				.andExpect(jsonPath("$[18].type").value("AGENT_SAID"))
+				.andExpect(jsonPath("$[18].agentId").value("focal"))
+				.andExpect(jsonPath("$[18].payload.counts_as_help").value(true))
+				.andExpect(jsonPath("$[22].type").value("RUN_ENDED"))
+				.andExpect(jsonPath("$[22].agentId").doesNotExist());
 	}
 
 	@Test
@@ -164,12 +167,12 @@ class RunIngestIT {
 
 	@Test
 	void seqGapIs400() throws Exception {
-		expect400(b -> Fixtures.list(b, "events").get(21).put("seq", 22));
+		expect400(b -> Fixtures.list(b, "events").get(22).put("seq", 23));
 	}
 
 	@Test
 	void duplicateSeqIs400() throws Exception {
-		expect400(b -> Fixtures.list(b, "events").get(21).put("seq", 20));
+		expect400(b -> Fixtures.list(b, "events").get(22).put("seq", 21));
 	}
 
 	@Test
@@ -184,22 +187,22 @@ class RunIngestIT {
 
 	@Test
 	void missingRunEndedIs400() throws Exception {
-		expect400(b -> Fixtures.list(b, "events").get(21).put("type", "AGENT_WAITED"));
+		expect400(b -> Fixtures.list(b, "events").get(22).put("type", "AGENT_WAITED"));
 	}
 
 	@Test
 	void runEndedNotLastIs400() throws Exception {
 		expect400(b -> {
 			List<Map<String, Object>> events = Fixtures.list(b, "events");
-			events.get(21).put("seq", 3);
-			events.get(3).put("seq", 21);
+			events.get(22).put("seq", 3);
+			events.get(3).put("seq", 22);
 		});
 	}
 
 	@Test
 	void twoRunEndedIs400() throws Exception {
 		expect400(b -> {
-			Map<String, Object> e = Fixtures.list(b, "events").get(20);
+			Map<String, Object> e = Fixtures.list(b, "events").get(21);
 			e.put("type", "RUN_ENDED");
 			e.put("agent_id", null);
 			e.put("payload", Map.of("reason", "max_ticks"));

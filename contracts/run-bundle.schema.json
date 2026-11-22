@@ -143,7 +143,7 @@
               "agent_id": { "type": "string" },
               "payload": {
                 "type": "object", "additionalProperties": false, "required": ["text", "thought", "scripted"],
-                "properties": { "text": { "type": "string" }, "thought": { "type": ["string", "null"] }, "scripted": { "type": "boolean" } }
+                "properties": { "text": { "type": "string" }, "thought": { "type": ["string", "null"] }, "scripted": { "type": "boolean" }, "counts_as_help": { "type": "boolean" } }
               }
             }
           }

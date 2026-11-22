@@ -40,7 +40,7 @@ def check_invariants(b):
 
     helps = [e for e in ev if e["payload"].get("counts_as_help")]
     assert all(e["agent_id"] == "focal" and e["tick"] >= 3 for e in helps)
-    assert all(e["type"] in ("AGENT_APPROACHED", "AGENT_CALLED") for e in helps)
+    assert all(e["type"] in ("AGENT_SAID", "AGENT_CALLED") for e in helps)  # an approach alone never counts
     assert len(helps) <= 1  # the focal agent stops acting after it helps
     focal = [e for e in ev if e["agent_id"] == "focal" and e["type"] in DECISIONS]
     if helps:

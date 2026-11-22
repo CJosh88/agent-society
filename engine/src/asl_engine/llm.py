@@ -48,6 +48,7 @@ class LlmResult:
 
 HELP_PROBABILITY = {"alone": 0.30, "group5": 0.08, "group5_owner": 0.25}
 MALFORMED_PROBABILITY = 0.05
+FOLLOW_UP_PROBABILITY = 0.85  # after approaching the problem target, the fake model speaks on the next turn
 
 
 class FakeScriptedChatModel(BaseChatModel):
@@ -91,6 +92,9 @@ class FakeScriptedChatModel(BaseChatModel):
 
         if rng.random() < MALFORMED_PROBABILITY:
             return 'Let me think about this. {"action": '
+        last = re.search(r"Your last actions: (.*)", prompt)
+        if problem and last and last.group(1).split("; ")[-1] == f"APPROACH {scene.target_id}" and rng.random() < FOLLOW_UP_PROBABILITY:
+            return '{"action": "SAY", "text": "Are you all right? Somebody help here.", "thought": "I should say something."}'
         if problem and rng.random() < HELP_PROBABILITY[condition]:
             if rng.random() < 0.5:
                 return f'{{"action": "APPROACH", "target_id": "{scene.target_id}", "thought": "I should go and check."}}'

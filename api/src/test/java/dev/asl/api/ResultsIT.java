@@ -88,7 +88,9 @@ class ResultsIT {
 				.andExpect(jsonPath("$.traceLinks", hasSize(0)))
 				.andExpect(jsonPath("$.scenarios[0].scenario").value("town_square"))
 				.andExpect(jsonPath("$.scenarios[0].rows", hasSize(0)))
-				.andExpect(jsonPath("$.scenarios[0].baseline").doesNotExist())
+				.andExpect(jsonPath("$.scenarios[0].baseline", hasSize(2))) // the Darley and Latane figures from application.yml
+				.andExpect(jsonPath("$.scenarios[0].baseline[0].condition").value("alone"))
+				.andExpect(jsonPath("$.scenarios[0].baseline[0].n").value(13))
 				.andExpect(jsonPath("$.scenarios[1].scenario").value("office"))
 				.andExpect(jsonPath("$.scenarios[1].rows", hasSize(2)))
 				.andExpect(jsonPath("$.scenarios[1].rows[0].condition").value("alone"))
