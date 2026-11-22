@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: api
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/asl}
+    username: ${SPRING_DATASOURCE_USERNAME:asl}
+    password: ${SPRING_DATASOURCE_PASSWORD:asl}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+
+server:
+  forward-headers-strategy: native
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+
+asl:
+  admin-key: ${ASL_ADMIN_KEY:dev-admin-key-change-me-00000000}
+  study-models: ${ASL_STUDY_MODELS:llama-3.1-8b,gpt-oss-120b,claude-haiku-5-5}
+  prompt-version: v1
+  featured-run-ids: ${ASL_FEATURED_RUN_IDS:}
+  trace-links: ${ASL_TRACE_LINKS:}
+  # Human baseline (town square only). Fill in after checking Darley & Latane (1968).
+  # baseline:
+  #   alone: {n: 0, helped: 0}
+  #   group: {n: 0, helped: 0}
