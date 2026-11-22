@@ -1,7 +1,7 @@
 import { CONDITION_LABELS, SCENARIO_LABELS, el, getJson, label, showError } from './common.js';
 
-// Set to the GitHub repository URL once it exists; links are left out while this is empty.
-const REPO_URL = '';
+// The GitHub repository. If this is emptied, the repo and write-up links are left out.
+const REPO_URL = 'https://github.com/CJosh88/agent-society';
 const WRITEUP_URL = REPO_URL && `${REPO_URL}/blob/main/docs/writeup.md`;
 
 const pct = (x) => `${Math.round(x * 100)}%`;
