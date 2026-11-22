@@ -28,7 +28,9 @@ asl:
   prompt-version: v1
   featured-run-ids: ${ASL_FEATURED_RUN_IDS:}
   trace-links: ${ASL_TRACE_LINKS:}
-  # Human baseline (town square only). Fill in after checking Darley & Latane (1968).
-  # baseline:
-  #   alone: {n: 0, helped: 0}
-  #   group: {n: 0, helped: 0}
+  # Human baseline (town square only). Darley & Latané (1968), JPSP 8(4), 377–383, Table 1.
+  # "helped" = reported the seizure before the victim's fit ended.
+  # alone = 2-person condition (subject + victim); group = 6-person condition (subject + victim + 4 others).
+  baseline:
+    alone: {n: 13, helped: 11}   # 85%
+    group: {n: 13, helped: 4}    # 31%

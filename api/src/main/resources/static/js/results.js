@@ -82,7 +82,8 @@ async function loadResults() {
     const data = await getJson('/api/results');
     body.replaceChildren(...data.scenarios.flatMap((sc) => [
       el('h3', {}, label(SCENARIO_LABELS, sc.scenario)),
-      sc.rows.length ? resultsTable(sc) : el('p', { class: 'muted' }, 'No study runs yet.'),
+      ...(sc.rows.length ? [] : [el('p', { class: 'muted' }, 'No study runs yet.')]),
+      ...(sc.rows.length || sc.baseline?.length ? [resultsTable(sc)] : []),
     ]), el('p', { class: 'note' },
       'Rates carry 95% Wilson intervals and differences 95% Newcombe intervals. Models are compared with themselves, never pooled.'));
     renderAboutLinks(data.traceLinks ?? []);
