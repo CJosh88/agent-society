@@ -21,9 +21,15 @@ from .graph import build_graph, run_one
 from .llm import LLMContext, get_model
 from .personas import write_personas
 
-app = typer.Typer(add_completion=False, no_args_is_help=True, help="Agent Society Lab engine")
+app = typer.Typer(add_completion=False, no_args_is_help=True)
 
 EXIT_BUDGET = 3
+
+
+@app.callback()
+def main() -> None:
+    """Agent Society Lab engine."""
+    config.load_env()
 
 
 def _check_model(key: str) -> None:

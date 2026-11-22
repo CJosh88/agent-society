@@ -62,3 +62,7 @@ Choices the design doc leaves open, and files added beyond its Target files tabl
 - `api/.dockerignore` (added): keeps `target/` out of the Docker build context.
 - `deploy/.env.example` ships working local defaults (`DOMAIN=localhost`, `POSTGRES_PASSWORD=asl`, the dev admin key) so the doc's `cp` then `up` check works. Change both secrets for a real server.
 - `deploy/deploy.sh` takes `user@host` as its argument and rsyncs everything except `.git`, `target`, `.venv`, `results` and `node_modules`, so `deploy/.env` travels with it. It has not been run against a real server.
+
+## Environment file
+
+- `engine/.env` (git-ignored) is loaded by the `asl` command at startup via `python-dotenv`. Variables already set in the shell take priority. `engine/.env.example` (added) lists every variable, with `LANGSMITH_PROJECT=agent-society-lab` so traces go to the project the doc names.

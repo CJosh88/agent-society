@@ -6,6 +6,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 ENGINE_VERSION = "0.1.0"
 EXPERIMENT = "agent_society_v1"
 
@@ -24,6 +26,11 @@ PERSONAS_PATH = ENGINE_DIR / "data" / "personas.json"
 RESULTS_DIR = ROOT_DIR / "results"
 GRAPH_PATH = ROOT_DIR / "docs" / "graph.mmd"
 SCHEMA_PATH = ROOT_DIR / "contracts" / "run-bundle.schema.json"
+
+
+def load_env(path: Path | None = None) -> bool:
+    """Load engine/.env if it exists. Variables already set in the shell win over the file."""
+    return load_dotenv(path or ENGINE_DIR / ".env", override=False)
 
 
 @dataclass(frozen=True)

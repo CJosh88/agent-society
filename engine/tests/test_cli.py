@@ -49,3 +49,18 @@ def test_make_personas_and_graph_write_files(tmp_path):
     assert runner.invoke(app, ["graph", "--out", str(g)]).exit_code == 0
     text = g.read_text(encoding="utf-8")
     assert "focal_turn" in text and "validate" in text and "tick_start" in text
+
+
+def test_dotenv_is_loaded_but_the_shell_wins(tmp_path, monkeypatch):
+    from asl_engine import config
+
+    env = tmp_path / ".env"
+    env.write_text("ASL_TEST_FROM_FILE=file\nASL_TEST_BOTH=file\n", encoding="utf-8")
+    for name in ("ASL_TEST_FROM_FILE", "ASL_TEST_BOTH"):
+        monkeypatch.setenv(name, "x")  # registers cleanup so the test leaves no variables behind
+        monkeypatch.delenv(name)
+    monkeypatch.setenv("ASL_TEST_BOTH", "shell")
+    assert config.load_env(env) is True
+    import os
+    assert os.environ["ASL_TEST_FROM_FILE"] == "file" and os.environ["ASL_TEST_BOTH"] == "shell"
+    assert config.load_env(tmp_path / "missing.env") is False
