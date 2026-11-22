@@ -42,11 +42,6 @@ def test_unknown_model_is_rejected():
     assert runner.invoke(app, ["batch", "--models", "gpt-5", "--runs", "1"]).exit_code != 0
 
 
-def test_analyze_is_not_yet_implemented():
-    r = runner.invoke(app, ["analyze"])
-    assert r.exit_code == 1 and "not yet" in r.output
-
-
 def test_make_personas_and_graph_write_files(tmp_path):
     p, g = tmp_path / "p.json", tmp_path / "g.mmd"
     assert runner.invoke(app, ["make-personas", "--seed", "42", "--out", str(p)]).exit_code == 0

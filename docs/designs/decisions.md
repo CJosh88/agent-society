@@ -46,3 +46,13 @@ Choices the design doc leaves open, and files added beyond its Target files tabl
 - The replay's location coordinates in `js/replay.js` repeat `world.py`. Both are frozen by the pre-registration.
 - The side-panel event log shows the current tick's events only, as the design says. Scrubbing the slider rebuilds state from the event list, so it is exact.
 - `StaticPagesIT` checks that `/` forwards to `index.html`, because MockMvc does not follow the welcome-page forward.
+
+## M4 (analysis)
+
+- `analysis.py` reads run summaries from `GET /api/runs` (100 per page) and computes everything locally, so `ASL_STUDY_MODELS=fake uv run asl analyze` works whatever the API's own `asl.study-models` says. The study models default to the three in the doc.
+- Because summaries carry per-run counts, the analysis tables show the share of runs with at least one parse failure or truncation. The website table uses the doc's per-decision and per-call rates instead.
+- Holm runs over the tests actually present (12 when every model and scenario has both conditions), not a fixed 12.
+- Both sensitivity variants are applied to the whole data set and then re-tested: (a) drop runs with a parse failure or truncation, (b) drop runs the probe flagged as recognised.
+- McNemar is one-sided in the hypothesised direction, using shared seeds only.
+- The human baseline is not in `results.md`; it is on the website table (from `asl.baseline`).
+- `docs/writeup.md` is a skeleton with headings only. The operator writes it.

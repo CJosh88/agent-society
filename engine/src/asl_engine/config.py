@@ -9,6 +9,7 @@ from pathlib import Path
 ENGINE_VERSION = "0.1.0"
 EXPERIMENT = "agent_society_v1"
 
+STUDY_MODELS = ("llama-3.1-8b", "gpt-oss-120b", "claude-haiku-5-5")
 SCENARIOS = ("town_square", "office")
 CONDITIONS = ("alone", "group5", "group5_owner")
 

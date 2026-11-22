@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import random
 import time
 from pathlib import Path
@@ -12,9 +13,10 @@ import httpx
 import typer
 
 from . import config
+from .analysis import build_report, fetch_runs
 from .budget import Budget
 from .client import post_bundle
-from .config import CONDITIONS, MODEL_REGISTRY, RESULTS_DIR, SCENARIOS
+from .config import CONDITIONS, MODEL_REGISTRY, RESULTS_DIR, SCENARIOS, STUDY_MODELS
 from .graph import build_graph, run_one
 from .llm import LLMContext, get_model
 from .personas import write_personas
@@ -121,7 +123,10 @@ async def _batch(specs: list[tuple[str, str, str, int]], pilot: bool, budget: Bu
 
 
 @app.command("analyze")
-def analyze() -> None:
-    """Not yet implemented: arrives in M4."""
-    typer.echo("analyze: not yet (arrives in M4)")
-    raise typer.Exit(1)
+def analyze(out: Path = RESULTS_DIR / "results.md") -> None:
+    """Read every run from the API and write results/results.md (study models from ASL_STUDY_MODELS)."""
+    models = [m for m in os.environ.get("ASL_STUDY_MODELS", ",".join(STUDY_MODELS)).split(",") if m]
+    report = build_report(fetch_runs(), models)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(report, encoding="utf-8")
+    typer.echo(f"wrote {out}")
