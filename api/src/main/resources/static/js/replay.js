@@ -6,13 +6,6 @@ const BUBBLE_MS = 1200;
 const MAX_TICK = 12;
 const COLORS = { focal: 0x2b6cb0, helped: 0x2f855a, scripted: 0x8a94a0 };
 
-// Sprites: Kenney's Tiny Town ('town') and Tiny Dungeon ('dungeon'), CC0, 16 px tiles drawn at 2x.
-// Numbers are frame indexes in the packed sheets (12 tiles per row).
-const SHEETS = { town: 'img/town.png', dungeon: 'img/dungeon.png' };
-const SCALE = 2;
-const PEOPLE = { focal: 99, s1: 85, s2: 88, s3: 100, s4: 112 };
-const DESK = [72, 73, 75]; // dungeon sheet: three tiles side by side
-const GRID = { w: 20, h: 15 };
 // Where each person sits, by the `seat` number in their AGENT_SPAWNED event (pixels).
 const SEATS = {
   alert_fatigue: [[320, 400]],
@@ -98,7 +91,7 @@ function frameAt(t) {
   return { notices, said, help, priority };
 }
 
-const initialOf = (name) => name.split(/\s+/)[0];
+const initials = (name) => name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 const tickX = (t) => TIMELINE.x0 + (t * (TIMELINE.x1 - TIMELINE.x0)) / MAX_TICK;
 const seatXY = (agentId) => SEATS[run.scenario][seatOf[agentId] ?? 0];
 
@@ -108,24 +101,20 @@ function startGame() {
   game?.destroy(true);
   document.getElementById('game').replaceChildren();
   game = new Phaser.Game({
-    type: Phaser.AUTO, width: 640, height: 480, parent: 'game', backgroundColor: '#f4f1ea', pixelArt: true,
+    type: Phaser.AUTO, width: 640, height: 480, parent: 'game', backgroundColor: '#f4f1ea',
     scene: {
-      preload() { for (const [key, url] of Object.entries(SHEETS)) this.load.spritesheet(key, url, { frameWidth: 16, frameHeight: 16 }); },
       create() { scene = this; build(); },
     },
   });
 }
 
-const tileAt = (sheet, frame, x, y) => scene.add.image(x * TILE + TILE / 2, y * TILE + TILE / 2, sheet, frame).setScale(SCALE);
-const label9 = { fontSize: '9px', color: '#fff', stroke: '#2d3748', strokeThickness: 3 };
 
 function drawBackground() {
-  for (let x = 0; x < GRID.w; x++) {
-    for (let y = 0; y < GRID.h; y++) tileAt('town', y === 0 ? [48, 49, 50][x % 3] : 109, x, y);
-  }
-  for (const a of agents) { // a desk in front of each person
+  const g = scene.add.graphics().setDepth(1);
+  for (const a of agents) { // a desk zone around each person
     const [sx, sy] = seatXY(a.agentId);
-    DESK.forEach((frame, i) => scene.add.image(sx + (i - 1) * TILE, sy - 26, 'dungeon', frame).setScale(SCALE).setDepth(1));
+    g.fillStyle(0xe7e3d8, 1).fillRoundedRect(sx - 1.5 * TILE, sy - 1.2 * TILE, 3 * TILE, 2.4 * TILE, 10);
+    g.lineStyle(1, 0xb8b2a2, 1).strokeRoundedRect(sx - 1.5 * TILE, sy - 1.2 * TILE, 3 * TILE, 2.4 * TILE, 10);
   }
   // The feed panel: alerts for alert_fatigue, the ticket for triage_herding.
   const triage = run.scenario === 'triage_herding';
@@ -162,12 +151,11 @@ function build() {
   sprites = {};
   for (const a of agents) {
     const [sx, sy] = seatXY(a.agentId);
-    const halo = scene.add.circle(0, 2, a.role === 'focal' ? 17 : 15, COLORS[a.role], 0.55);
-    if (a.role === 'focal') halo.setStrokeStyle(2, 0xffffff);
-    const person = scene.add.image(0, 0, 'dungeon', PEOPLE[a.agentId]).setScale(SCALE);
-    const nameTag = scene.add.text(0, 19, initialOf(a.name), label9).setOrigin(0.5, 0);
-    sprites[a.agentId] = scene.add.container(sx, sy, [halo, person, nameTag]).setDepth(4);
-    sprites[a.agentId].disc = halo;
+    const body = scene.add.circle(0, 0, a.role === 'focal' ? 14 : 11, COLORS[a.role]);
+    if (a.role === 'focal') body.setStrokeStyle(3, 0xffffff);
+    const text = scene.add.text(0, 0, initials(a.name), { fontSize: '11px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+    sprites[a.agentId] = scene.add.container(sx, sy, [body, text]).setDepth(4);
+    sprites[a.agentId].disc = body;
   }
   ready = true;
   document.getElementById('play').disabled = false;

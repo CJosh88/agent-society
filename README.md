@@ -88,7 +88,3 @@ deploy/deploy.sh user@host              # rsync to /opt/asl, then docker compose
 ```
 
 Caddy terminates HTTPS and proxies to the API; Postgres is never published. Certificates persist in the `caddy_data` volume.
-
-## Credits
-
-Replay sprites are Kenney's [Tiny Town](https://kenney.nl/assets/tiny-town) and [Tiny Dungeon](https://kenney.nl/assets/tiny-dungeon), released under CC0 (see `api/src/main/resources/static/img/CREDITS.txt`).
