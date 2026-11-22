@@ -85,6 +85,7 @@ class ResultsIT {
 
 		mvc.perform(get("/api/results")).andExpect(status().isOk())
 				.andExpect(jsonPath("$.scenarios", hasSize(2)))
+				.andExpect(jsonPath("$.traceLinks", hasSize(0)))
 				.andExpect(jsonPath("$.scenarios[0].scenario").value("town_square"))
 				.andExpect(jsonPath("$.scenarios[0].rows", hasSize(0)))
 				.andExpect(jsonPath("$.scenarios[0].baseline").doesNotExist())

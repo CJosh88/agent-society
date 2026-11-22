@@ -494,6 +494,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ScenarioResults"
+        traceLinks:
+          type: array
+          items:
+            type: string
     Row:
       type: object
       properties:

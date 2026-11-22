@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent Society Lab</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header>
+  <h1>Agent Society Lab</h1>
+  <p class="lede">Does an LLM agent stop acting on a problem when other people are present and do nothing,
+    and does a named owner bring the action back?</p>
+</header>
+<main>
+  <section id="featured">
+    <h2>Featured runs</h2>
+    <div id="featured-body" class="cards" aria-live="polite">Loading…</div>
+  </section>
+
+  <section id="results">
+    <h2>Results</h2>
+    <div id="results-body" aria-live="polite">Loading…</div>
+  </section>
+
+  <section id="runs">
+    <h2>Runs</h2>
+    <form class="filters" id="run-filters" aria-label="Filter runs">
+      <label>Scenario
+        <select name="scenario">
+          <option value="">All</option>
+          <option value="town_square">Town square</option>
+          <option value="office">Office</option>
+        </select>
+      </label>
+      <label>Model
+        <select name="model">
+          <option value="">All</option>
+          <option value="llama-3.1-8b">llama-3.1-8b</option>
+          <option value="gpt-oss-120b">gpt-oss-120b</option>
+          <option value="claude-haiku-5-5">claude-haiku-5-5</option>
+          <option value="fake">fake</option>
+        </select>
+      </label>
+      <label>Condition
+        <select name="condition">
+          <option value="">All</option>
+          <option value="alone">Alone</option>
+          <option value="group5">Group of 5</option>
+          <option value="group5_owner">Group of 5 + owner</option>
+        </select>
+      </label>
+    </form>
+    <div id="runs-body" class="table-wrap" aria-live="polite">Loading…</div>
+    <nav class="pager" id="pager" aria-label="Pages"></nav>
+  </section>
+
+  <section id="about">
+    <h2>About</h2>
+    <p><strong>The question.</strong> When several people see a problem and nobody acts, each can assume
+      someone else will. This project asks whether an LLM agent does the same: one focal agent shares a scene
+      with four scripted people who never help, in a town square where a stranger collapses and in an office
+      where a payments dashboard turns red. A third condition names the agent as the owner of the problem.</p>
+    <p><strong>The design.</strong> Three models are compared with themselves across conditions, per scene,
+      using 50 paired seeds per cell. The focal agent is told only that it is an ordinary afternoon, and its
+      options are neutral verbs, so nothing hints at the expected answer. A Python LangGraph engine plays the
+      runs, a Spring Boot API stores every event and every raw model call, and this page replays them.</p>
+    <p><strong>The limits.</strong> These are tendencies of language models in a toy scene, not evidence about
+      people or about any production system. The other four people are scripted, sampling uses provider
+      defaults so reruns will differ, and smaller effects than a drop from about 90% to 60% are underpowered.</p>
+    <p id="about-links" class="muted"></p>
+  </section>
+</main>
+<script type="module" src="js/results.js"></script>
+</body>
+</html>

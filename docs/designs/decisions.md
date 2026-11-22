@@ -36,3 +36,13 @@ Choices the design doc leaves open, and files added beyond its Target files tabl
 - Workers AI models are built with `init_chat_model(model_id, model_provider="openai", base_url=..., api_key=...)`. The real-provider branches are untested until the M4 pilots, which will show whether Workers AI accepts `max_tokens` and `reasoning_effort` and returns usage data.
 - `run_one` takes an optional `ctx` so tests can inject a model. Normal callers leave it out.
 - `asl graph` and `asl batch` write under the repo root (`docs/`, `results/`) whatever the working directory, found from the package location.
+
+## M3 (frontend)
+
+- `js/common.js` (added): the `el`, `getJson` and error helpers both pages share, so neither duplicates them. All API data enters the DOM through `textContent`, never `innerHTML`.
+- `/api/results` gains a `traceLinks` field (from `asl.trace-links`) because no listed endpoint exposes that config and the About section needs it.
+- The repo and write-up links on the index page are left out until `REPO_URL` at the top of `js/results.js` is set, because the repository URL is not known yet.
+- Until `asl.baseline` is filled in, the town-square table ends with an italic row saying the human baseline is not entered yet.
+- The replay's location coordinates in `js/replay.js` repeat `world.py`. Both are frozen by the pre-registration.
+- The side-panel event log shows the current tick's events only, as the design says. Scrubbing the slider rebuilds state from the event list, so it is exact.
+- `StaticPagesIT` checks that `/` forwards to `index.html`, because MockMvc does not follow the welcome-page forward.

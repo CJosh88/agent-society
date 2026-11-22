@@ -81,7 +81,7 @@ class ResultsService {
 			scenarios.add(new ScenarioResults(scenario, rows, diffs,
 					scenario.equals("town_square") ? baseline() : null));
 		}
-		return new ResultsResponse(scenarios);
+		return new ResultsResponse(scenarios, props.traceLinks());
 	}
 
 	private static Optional<Row> find(List<Cellrow> cells, String scenario, String model, String condition) {

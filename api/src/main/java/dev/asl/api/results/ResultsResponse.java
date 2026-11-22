@@ -4,7 +4,8 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-public record ResultsResponse(List<ScenarioResults> scenarios) {
+/** traceLinks carries asl.trace-links so the About section can link public LangSmith traces. */
+public record ResultsResponse(List<ScenarioResults> scenarios, List<String> traceLinks) {
 
 	public record ScenarioResults(String scenario, List<Row> rows, List<Difference> differences,
 			@JsonInclude(JsonInclude.Include.NON_NULL) List<BaselineRow> baseline) {
