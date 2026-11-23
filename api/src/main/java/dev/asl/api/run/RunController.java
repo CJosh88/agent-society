@@ -24,8 +24,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/runs")
 class RunController {
 
-	private static final Set<String> SCENARIOS = Set.of("alert_fatigue", "triage_herding");
-	private static final Set<String> CONDITIONS = Set.of("calm", "fatigue_3", "fatigue_6", "alone", "dismiss", "endorse");
+	private static final Set<String> SCENARIOS = RunScenarios.CONDITIONS.keySet();
+	private static final Set<String> CONDITIONS = Set.copyOf(RunScenarios.CONDITIONS.get(RunScenarios.SCENARIO));
+	private static final Set<String> POPULATIONS = Set.copyOf(RunScenarios.POPULATIONS);
 	private static final int MAX_PAGE_SIZE = 100;
 
 	private final RunRepository runs;
@@ -41,11 +42,14 @@ class RunController {
 	}
 
 	@GetMapping
-	Page<RunSummary> list(@RequestParam(required = false) String scenario, @RequestParam(required = false) String model,
+	Page<RunSummary> list(@RequestParam(required = false) String scenario, @RequestParam(required = false) String population,
 			@RequestParam(required = false) String condition, @RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "20") int size) {
 		if (scenario != null && !SCENARIOS.contains(scenario)) {
 			throw new BadRequest("Unknown scenario: " + scenario);
+		}
+		if (population != null && !POPULATIONS.contains(population)) {
+			throw new BadRequest("Unknown population: " + population);
 		}
 		if (condition != null && !CONDITIONS.contains(condition)) {
 			throw new BadRequest("Unknown condition: " + condition);
@@ -55,7 +59,7 @@ class RunController {
 		}
 		PageRequest pr = PageRequest.of(page, Math.min(size, MAX_PAGE_SIZE),
 				Sort.by(Sort.Order.desc("createdAt"), Sort.Order.asc("id")));
-		return runs.search(scenario, model, condition, pr).map(RunController::summary);
+		return runs.search(scenario, population, condition, pr).map(RunController::summary);
 	}
 
 	@GetMapping("/featured")
@@ -69,7 +73,7 @@ class RunController {
 		Run r = runs.findById(id).orElseThrow(() -> new NotFound(id));
 		return new RunDetail(
 				new RunDetail.RunView(r.id, r.experiment, r.scenario, r.condition, r.model, r.seed, r.promptVersion,
-						r.startedAt, r.endedAt, r.focalHelped, r.earlyHelp, r.focalHelpTick, r.recognized),
+						r.startedAt, r.endedAt, r.accuracy, r.ratedCount, r.probeCount, r.recognisedSample),
 				agents.findByRunId(id).stream()
 						.map(a -> new RunDetail.AgentView(a.agentId, a.name, a.role, a.persona)).toList());
 	}
@@ -84,7 +88,7 @@ class RunController {
 	}
 
 	private static RunSummary summary(Run r) {
-		return new RunSummary(r.id, r.scenario, r.condition, r.model, r.seed, r.pilot, r.createdAt, r.focalHelped,
-				r.earlyHelp, r.focalHelpTick, r.parseFailures, r.truncations, r.recognized);
+		return new RunSummary(r.id, r.scenario, r.condition, r.model, r.seed, r.pilot, r.createdAt, r.accuracy,
+				r.ratedCount, r.parseFailures, r.truncations, r.probeCount, r.recognisedSample);
 	}
 }

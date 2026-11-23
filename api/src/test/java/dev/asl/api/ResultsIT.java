@@ -8,9 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.time.Instant;
 import java.util.UUID;
 
-import dev.asl.api.results.NewcombeInterval;
-import dev.asl.api.results.WilsonInterval;
-
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -38,21 +35,20 @@ class ResultsIT {
 		jdbc.sql("DELETE FROM runs").update();
 	}
 
-	/** Inserts count runs, the first {@code helped} of which helped at tick 4 (the rest never helped). */
-	private void seed(String scenario, String condition, String model, boolean pilot, String promptVersion, int count,
-			int helped) {
+	/** Inserts count worlds (seeds 0..count-1) with the same accuracy: 2 parse failures and 1 truncation in 100 calls. */
+	private void seed(String experiment, String condition, String population, boolean pilot, String promptVersion,
+			int count, double accuracy) {
 		for (int i = 0; i < count; i++) {
-			boolean h = i < helped;
 			jdbc.sql("""
 					INSERT INTO runs (id, experiment, scenario, condition, model, seed, prompt_version, engine_version,
-					  pilot, started_at, ended_at, focal_helped, early_help, focal_help_tick, decision_count,
-					  parse_failures, truncations, llm_call_count, recognized)
-					VALUES (:id, 'agent_society_v2', :scenario, :condition, :model, :seed, :pv, '0.1.0',
-					  :pilot, :t, :t, :h, :h, :tick, 10, 1, 0, 11, false)
-					""").param("id", UUID.randomUUID()).param("scenario", scenario).param("condition", condition)
-					.param("model", model).param("seed", i).param("pv", promptVersion).param("pilot", pilot)
-					.param("t", java.sql.Timestamp.from(Instant.now())).param("h", h)
-					.param("tick", h ? 4 : null, java.sql.Types.INTEGER).update();
+					  pilot, started_at, ended_at, accuracy, rated_count, parse_failures, truncations, llm_call_count,
+					  probe_count, recognised_sample)
+					VALUES (:id, :experiment, 'triage_cascade', :condition, :population, :seed, :pv, '0.1.0',
+					  :pilot, :t, :t, :accuracy, 800, 2, 1, 100, 10, 2)
+					""").param("id", UUID.randomUUID()).param("experiment", experiment).param("condition", condition)
+					.param("population", population).param("seed", i).param("pv", promptVersion)
+					.param("pilot", pilot).param("t", java.sql.Timestamp.from(Instant.now()))
+					.param("accuracy", accuracy).update();
 		}
 	}
 
@@ -72,49 +68,44 @@ class ResultsIT {
 	}
 
 	@Test
-	void ratesAndIntervalsCountOnlyStudyRuns() throws Exception {
-		seed("alert_fatigue", "calm", "llama-3.1-8b", false, "v2", 10, 9);
-		seed("alert_fatigue", "fatigue_6", "llama-3.1-8b", false, "v2", 10, 3);
+	void meansAndDifferencesCountOnlyStudyRuns() throws Exception {
+		seed("cascade_v1", "independent", "llama-3.1-8b", false, "c1", 8, 0.8);
+		seed("cascade_v1", "weak", "llama-3.1-8b", false, "c1", 8, 0.6);
 		// None of these may be counted:
-		seed("alert_fatigue", "calm", "llama-3.1-8b", true, "v2", 5, 0); // pilot
-		seed("alert_fatigue", "calm", "fake", false, "v2", 5, 0); // not a study model
-		seed("alert_fatigue", "calm", "llama-3.1-8b", false, "v1", 5, 0); // other prompt version
-
-		double[] alone = WilsonInterval.of(9, 10);
-		double[] diff = NewcombeInterval.difference(3, 10, 9, 10);
+		seed("cascade_v1", "independent", "llama-3.1-8b", true, "c1", 5, 0.0); // pilot
+		seed("cascade_v1", "independent", "fake", false, "c1", 5, 0.0); // not a study population
+		seed("cascade_v1", "independent", "llama-3.1-8b", false, "c0", 5, 0.0); // other prompt version
+		seed("cascade_rl_v1", "independent", "llama-3.1-8b", false, "c1", 5, 0.0); // other experiment
 
 		mvc.perform(get("/api/results")).andExpect(status().isOk())
-				.andExpect(jsonPath("$.scenarios", hasSize(2)))
 				.andExpect(jsonPath("$.traceLinks", hasSize(0)))
-				.andExpect(jsonPath("$.scenarios[0].scenario").value("alert_fatigue"))
-				.andExpect(jsonPath("$.scenarios[1].scenario").value("triage_herding"))
-				.andExpect(jsonPath("$.scenarios[1].rows", hasSize(0)))
-				.andExpect(jsonPath("$.scenarios[0].rows", hasSize(2)))
-				.andExpect(jsonPath("$.scenarios[0].rows[0].condition").value("calm"))
-				.andExpect(jsonPath("$.scenarios[0].rows[0].n").value(10))
-				.andExpect(jsonPath("$.scenarios[0].rows[0].helped").value(9))
-				.andExpect(jsonPath("$.scenarios[0].rows[0].rate").value(0.9))
-				.andExpect(jsonPath("$.scenarios[0].rows[0].ciLow").value(near(alone[0], 1e-9)))
-				.andExpect(jsonPath("$.scenarios[0].rows[0].ciHigh").value(near(alone[1], 1e-9)))
-				.andExpect(jsonPath("$.scenarios[0].rows[0].earlyRate").value(0.9))
-				.andExpect(jsonPath("$.scenarios[0].rows[0].medianHelpTick").value(4.0))
-				.andExpect(jsonPath("$.scenarios[0].rows[0].parseFailureRate").value(0.1))
-				.andExpect(jsonPath("$.scenarios[0].rows[0].truncationRate").value(0.0))
-				.andExpect(jsonPath("$.scenarios[0].rows[0].recognitionRate").value(0.0))
-				.andExpect(jsonPath("$.scenarios[0].rows[1].condition").value("fatigue_6"))
-				.andExpect(jsonPath("$.scenarios[0].rows[1].rate").value(0.3))
-				.andExpect(jsonPath("$.scenarios[0].differences", hasSize(1)))
-				.andExpect(jsonPath("$.scenarios[0].differences[0].comparison").value("fatigue_6-calm"))
-				.andExpect(jsonPath("$.scenarios[0].differences[0].diff").value(near(-0.6, 1e-9)))
-				.andExpect(jsonPath("$.scenarios[0].differences[0].ciLow").value(near(diff[1], 1e-9)))
-				.andExpect(jsonPath("$.scenarios[0].differences[0].ciHigh").value(near(diff[2], 1e-9)));
+				.andExpect(jsonPath("$.populations", hasSize(5)))
+				.andExpect(jsonPath("$.populations[0].population").value("llama-3.1-8b"))
+				.andExpect(jsonPath("$.populations[1].rows", hasSize(0)))
+				.andExpect(jsonPath("$.populations[0].rows", hasSize(2)))
+				.andExpect(jsonPath("$.populations[0].rows[0].condition").value("independent"))
+				.andExpect(jsonPath("$.populations[0].rows[0].n").value(8))
+				.andExpect(jsonPath("$.populations[0].rows[0].meanAccuracy").value(near(0.8, 1e-9)))
+				.andExpect(jsonPath("$.populations[0].rows[0].ciLow").value(near(0.8, 1e-9)))
+				.andExpect(jsonPath("$.populations[0].rows[0].ciHigh").value(near(0.8, 1e-9)))
+				.andExpect(jsonPath("$.populations[0].rows[0].parseFailureRate").value(near(0.02, 1e-9)))
+				.andExpect(jsonPath("$.populations[0].rows[0].truncationRate").value(near(0.01, 1e-9)))
+				.andExpect(jsonPath("$.populations[0].rows[0].recognitionRate").value(near(0.2, 1e-9)))
+				.andExpect(jsonPath("$.populations[0].rows[1].condition").value("weak"))
+				.andExpect(jsonPath("$.populations[0].rows[1].meanAccuracy").value(near(0.6, 1e-9)))
+				.andExpect(jsonPath("$.populations[0].differences", hasSize(1)))
+				.andExpect(jsonPath("$.populations[0].differences[0].comparison").value("weak-independent"))
+				.andExpect(jsonPath("$.populations[0].differences[0].diff").value(near(-0.2, 1e-9)))
+				.andExpect(jsonPath("$.populations[0].differences[0].ciLow").value(near(-0.2, 1e-9)))
+				.andExpect(jsonPath("$.populations[0].differences[0].ciHigh").value(near(-0.2, 1e-9)));
 	}
 
 	@Test
-	void medianHelpTickIsNullWhenNobodyHelped() throws Exception {
-		seed("triage_herding", "dismiss", "gpt-oss-120b", false, "v2", 4, 0);
+	void worldsWithoutAnyRatingAreCountedButNotAveraged() throws Exception {
+		seed("cascade_v1", "independent", "gpt-oss-120b", false, "c1", 3, 0.7);
+		jdbc.sql("UPDATE runs SET accuracy = NULL, rated_count = 0 WHERE seed = 0").update();
 		mvc.perform(get("/api/results")).andExpect(status().isOk())
-				.andExpect(jsonPath("$.scenarios[1].rows[0].rate").value(0.0))
-				.andExpect(jsonPath("$.scenarios[1].rows[0].medianHelpTick").doesNotExist());
+				.andExpect(jsonPath("$.populations[1].rows[0].n").value(3))
+				.andExpect(jsonPath("$.populations[1].rows[0].meanAccuracy").value(near(0.7, 1e-9)));
 	}
 }

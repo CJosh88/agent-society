@@ -19,21 +19,22 @@ class Run implements Persistable<UUID> {
 	String experiment;
 	String scenario;
 	String condition;
+	/** The population label (llama-3.1-8b, mix_early, ...); the column keeps its v0.3 name. */
 	String model;
+	/** The world seed. */
 	long seed;
 	String promptVersion;
 	String engineVersion;
 	boolean pilot;
 	Instant startedAt;
 	Instant endedAt;
-	boolean focalHelped;
-	boolean earlyHelp;
-	Integer focalHelpTick;
-	int decisionCount;
+	Double accuracy;
+	int ratedCount;
 	int parseFailures;
 	int truncations;
 	int llmCallCount;
-	Boolean recognized;
+	int probeCount;
+	int recognisedSample;
 	Instant createdAt;
 
 	@Override

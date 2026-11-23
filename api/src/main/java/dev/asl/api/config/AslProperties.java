@@ -8,13 +8,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("asl")
 public record AslProperties(
 		String adminKey,
-		List<String> studyModels,
+		List<String> studyPopulations,
 		String promptVersion,
 		List<UUID> featuredRunIds,
 		List<String> traceLinks) {
 
 	public AslProperties {
-		studyModels = studyModels == null ? List.of() : studyModels;
+		studyPopulations = studyPopulations == null ? List.of() : studyPopulations;
 		featuredRunIds = featuredRunIds == null ? List.of() : featuredRunIds;
 		traceLinks = traceLinks == null ? List.of() : traceLinks;
 	}

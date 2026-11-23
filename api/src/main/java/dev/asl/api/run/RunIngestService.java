@@ -1,21 +1,16 @@
 package dev.asl.api.run;
 
 import java.time.Instant;
-import java.util.Set;
 import java.util.UUID;
 
 import dev.asl.api.run.RunExceptions.AlreadyExists;
 import dev.asl.api.run.dto.RunBundle;
-import dev.asl.api.run.dto.RunBundle.EventInfo;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class RunIngestService {
-
-	private static final Set<String> DECISION_TYPES = Set.of("AGENT_SAID", "AGENT_WAITED", "AGENT_CALLED",
-			"AGENT_PRIORITY_SET", "ACTION_PARSE_FAILED");
 
 	private final BundleValidator validator;
 	private final RunRepository runs;
@@ -91,8 +86,8 @@ public class RunIngestService {
 		r.experiment = info.experiment();
 		r.scenario = info.scenario();
 		r.condition = info.condition();
-		r.model = info.model();
-		r.seed = info.seed();
+		r.model = info.population();
+		r.seed = info.worldSeed();
 		r.promptVersion = info.promptVersion();
 		r.engineVersion = info.engineVersion();
 		r.pilot = info.pilot();
@@ -100,21 +95,18 @@ public class RunIngestService {
 		r.endedAt = info.endedAt();
 		r.createdAt = Instant.now();
 
-		Integer helpTick = b.events().stream()
-				.filter(e -> "focal".equals(e.agentId()) && e.payload().get("counts_as_help") == Boolean.TRUE)
-				.map(EventInfo::tick).min(Integer::compare).orElse(null);
-		r.focalHelpTick = helpTick;
-		r.focalHelped = helpTick != null;
-		r.earlyHelp = helpTick != null && helpTick <= RunScenarios.ONSET_TICK.get(info.scenario()) + 2;
-		r.decisionCount = (int) b.events().stream()
-				.filter(e -> "focal".equals(e.agentId()) && DECISION_TYPES.contains(e.type())).count();
+		// Accuracy is over every rating in the world, scripted agents included: correct ratings / all ratings.
+		var ratings = b.events().stream().filter(e -> e.type().equals("AGENT_RATED")).toList();
+		r.ratedCount = ratings.size();
+		long correct = ratings.stream().filter(e -> e.payload().get("correct") == Boolean.TRUE).count();
+		r.accuracy = ratings.isEmpty() ? null : (double) correct / ratings.size();
 		r.parseFailures = (int) b.events().stream().filter(e -> e.type().equals("ACTION_PARSE_FAILED")).count();
 		r.truncations = (int) b.llmCalls().stream()
 				.filter(c -> "length".equals(c.finishReason()) || "max_tokens".equals(c.finishReason())).count();
 		r.llmCallCount = b.llmCalls().size();
-		r.recognized = b.events().stream().filter(e -> e.type().equals("PROBE_ANSWERED"))
-				.map(e -> e.payload().get("recognized")).filter(Boolean.class::isInstance).map(Boolean.class::cast)
-				.findFirst().orElse(null);
+		var probes = b.events().stream().filter(e -> e.type().equals("PROBE_ANSWERED")).toList();
+		r.probeCount = probes.size();
+		r.recognisedSample = (int) probes.stream().filter(e -> e.payload().get("recognized") == Boolean.TRUE).count();
 		return r;
 	}
 }

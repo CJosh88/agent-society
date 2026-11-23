@@ -3,14 +3,16 @@ package dev.asl.api.run;
 import java.util.List;
 import java.util.Map;
 
-/** The scenarios, their conditions in display order, and the tick at which the real problem starts. */
+/** The scenario, its conditions in display order (the first is the baseline), and the populations. */
 public final class RunScenarios {
 
-	public static final Map<String, List<String>> CONDITIONS = Map.of(
-			"alert_fatigue", List.of("calm", "fatigue_3", "fatigue_6"),
-			"triage_herding", List.of("alone", "dismiss", "endorse"));
+	public static final String SCENARIO = "triage_cascade";
 
-	public static final Map<String, Integer> ONSET_TICK = Map.of("alert_fatigue", 9, "triage_herding", 3);
+	public static final Map<String, List<String>> CONDITIONS = Map.of(
+			SCENARIO, List.of("independent", "weak", "strong", "seeded_wrong"));
+
+	public static final List<String> POPULATIONS = List.of("llama-3.1-8b", "gpt-oss-120b", "claude-haiku-5-5",
+			"mix_early", "mix_late", "fake");
 
 	private RunScenarios() {
 	}

@@ -22,13 +22,16 @@ public record RunBundle(
 		@JsonProperty("events") @NotEmpty List<@NotNull @Valid EventInfo> events,
 		@JsonProperty("llm_calls") @NotNull List<@NotNull @Valid LlmCallInfo> llmCalls) {
 
+	/** a1 to a200: the number is the agent's position in the line. */
+	static final String AGENT_ID = "a([1-9][0-9]?|1[0-9]{2}|200)";
+
 	public record RunInfo(
 			@JsonProperty("id") @NotNull UUID id,
-			@JsonProperty("experiment") @NotNull @Pattern(regexp = "agent_society_v2") String experiment,
-			@JsonProperty("scenario") @NotNull @Pattern(regexp = "alert_fatigue|triage_herding") String scenario,
-			@JsonProperty("condition") @NotNull @Pattern(regexp = "calm|fatigue_3|fatigue_6|alone|dismiss|endorse") String condition,
-			@JsonProperty("model") @NotBlank String model,
-			@JsonProperty("seed") @NotNull @Min(0) Long seed,
+			@JsonProperty("experiment") @NotNull @Pattern(regexp = "cascade_v1") String experiment,
+			@JsonProperty("scenario") @NotNull @Pattern(regexp = "triage_cascade") String scenario,
+			@JsonProperty("condition") @NotNull @Pattern(regexp = "independent|weak|strong|seeded_wrong") String condition,
+			@JsonProperty("population") @NotNull @Pattern(regexp = "llama-3[.]1-8b|gpt-oss-120b|claude-haiku-5-5|mix_early|mix_late|fake") String population,
+			@JsonProperty("world_seed") @NotNull @Min(0) Long worldSeed,
 			@JsonProperty("prompt_version") @NotBlank String promptVersion,
 			@JsonProperty("engine_version") @NotBlank String engineVersion,
 			@JsonProperty("pilot") @NotNull Boolean pilot,
@@ -37,23 +40,23 @@ public record RunBundle(
 	}
 
 	public record AgentInfo(
-			@JsonProperty("agent_id") @NotBlank String agentId,
+			@JsonProperty("agent_id") @NotNull @Pattern(regexp = AGENT_ID) String agentId,
 			@JsonProperty("name") @NotBlank String name,
-			@JsonProperty("role") @NotNull @Pattern(regexp = "focal|scripted") String role,
+			@JsonProperty("role") @NotNull @Pattern(regexp = "agent|scripted") String role,
 			@JsonProperty("persona") @NotNull Map<String, Object> persona) {
 	}
 
 	public record EventInfo(
 			@JsonProperty("seq") @NotNull @Min(0) Integer seq,
-			@JsonProperty("tick") @NotNull @Min(0) @Max(12) Integer tick,
-			@JsonProperty("type") @NotNull @Pattern(regexp = "AGENT_SPAWNED|NOTICE_SHOWN|AGENT_SAID|AGENT_WAITED|AGENT_CALLED|AGENT_PRIORITY_SET|ACTION_PARSE_FAILED|PROBE_ANSWERED|RUN_ENDED") String type,
-			@JsonProperty("agent_id") String agentId,
+			@JsonProperty("tick") @NotNull @Min(1) @Max(200) Integer tick,
+			@JsonProperty("type") @NotNull @Pattern(regexp = "AGENT_SPAWNED|TICKETS_SHOWN|AGENT_PICKED|AGENT_RATED|ACTION_PARSE_FAILED|PROBE_ANSWERED|RUN_ENDED") String type,
+			@JsonProperty("agent_id") @Pattern(regexp = AGENT_ID) String agentId,
 			@JsonProperty("payload") @NotNull Map<String, Object> payload) {
 	}
 
 	public record LlmCallInfo(
-			@JsonProperty("agent_id") @NotBlank String agentId,
-			@JsonProperty("tick") @NotNull @Min(0) @Max(12) Integer tick,
+			@JsonProperty("agent_id") @NotNull @Pattern(regexp = AGENT_ID) String agentId,
+			@JsonProperty("tick") @NotNull @Min(1) @Max(200) Integer tick,
 			@JsonProperty("kind") @NotNull @Pattern(regexp = "decision|probe") String kind,
 			@JsonProperty("attempt") @NotNull @Min(1) @Max(2) Integer attempt,
 			@JsonProperty("prompt") @NotNull String prompt,

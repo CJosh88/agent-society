@@ -28,12 +28,21 @@ public final class Fixtures {
 		}
 	}
 
-	public static Map<String, Object> triage() {
-		return load("bundle-triage-dismiss.json");
+	public static Map<String, Object> weak() {
+		return load("bundle-weak-small.json");
 	}
 
-	public static Map<String, Object> fatigue() {
-		return load("bundle-alert-fatigue6.json");
+	public static Map<String, Object> seededWrong() {
+		return load("bundle-seeded-wrong-small.json");
+	}
+
+	/** The first event of the given type, so tests do not depend on fixture positions. */
+	public static Map<String, Object> event(Map<String, Object> bundle, String type) {
+		return events(bundle, type).get(0);
+	}
+
+	public static List<Map<String, Object>> events(Map<String, Object> bundle, String type) {
+		return list(bundle, "events").stream().filter(e -> type.equals(e.get("type"))).toList();
 	}
 
 	public static String json(Object o) {

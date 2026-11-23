@@ -3,7 +3,7 @@ package dev.asl.api.run.dto;
 import java.time.Instant;
 import java.util.UUID;
 
-public record RunSummary(UUID id, String scenario, String condition, String model, long seed, boolean pilot,
-		Instant createdAt, boolean focalHelped, boolean earlyHelp, Integer focalHelpTick, int parseFailures,
-		int truncations, Boolean recognized) {
+public record RunSummary(UUID id, String scenario, String condition, String population, long worldSeed, boolean pilot,
+		Instant createdAt, Double accuracy, int ratedCount, int parseFailures, int truncations, int probeCount,
+		int recognisedSample) {
 }

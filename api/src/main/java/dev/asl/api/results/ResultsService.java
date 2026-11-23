@@ -2,13 +2,12 @@ package dev.asl.api.results;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import dev.asl.api.config.AslProperties;
-import dev.asl.api.run.RunScenarios;
 import dev.asl.api.results.ResultsResponse.Difference;
+import dev.asl.api.results.ResultsResponse.PopulationResults;
 import dev.asl.api.results.ResultsResponse.Row;
-import dev.asl.api.results.ResultsResponse.ScenarioResults;
+import dev.asl.api.run.RunScenarios;
 
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
@@ -16,24 +15,18 @@ import org.springframework.stereotype.Service;
 @Service
 class ResultsService {
 
-	private static final List<String> SCENARIOS = List.of("alert_fatigue", "triage_herding");
-
+	/** One row per world. Worlds with no valid rating have no accuracy and are left out of the means. */
 	private static final String SQL = """
-			SELECT scenario, model, condition,
-			       count(*) AS n,
-			       count(*) FILTER (WHERE focal_helped) AS helped,
-			       count(*) FILTER (WHERE early_help) AS early,
-			       percentile_cont(0.5) WITHIN GROUP (ORDER BY focal_help_tick) FILTER (WHERE focal_helped) AS median_tick,
-			       coalesce(sum(parse_failures), 0) AS pf, coalesce(sum(decision_count), 0) AS dc,
-			       coalesce(sum(truncations), 0) AS tr, coalesce(sum(llm_call_count), 0) AS lc,
-			       count(*) FILTER (WHERE recognized) AS rec, count(recognized) AS rec_n
+			SELECT model, condition, accuracy, parse_failures, truncations, llm_call_count, probe_count,
+			       recognised_sample
 			FROM runs
-			WHERE pilot = false AND experiment = 'agent_society_v2'
-			  AND prompt_version = :promptVersion AND model IN (:models)
-			GROUP BY scenario, model, condition
+			WHERE pilot = false AND experiment = 'cascade_v1' AND scenario = 'triage_cascade'
+			  AND prompt_version = :promptVersion AND model IN (:populations)
+			ORDER BY model, condition, seed
 			""";
 
-	private record Cellrow(String scenario, Row row) {
+	private record World(String population, String condition, Double accuracy, int parseFailures, int truncations,
+			int calls, int probes, int recognised) {
 	}
 
 	private final JdbcClient jdbc;
@@ -45,58 +38,47 @@ class ResultsService {
 	}
 
 	ResultsResponse results() {
-		List<String> models = props.studyModels();
-		List<Cellrow> cells = models.isEmpty() ? List.of()
-				: jdbc.sql(SQL).param("promptVersion", props.promptVersion()).param("models", models)
-						.query((rs, i) -> {
-							int n = rs.getInt("n");
-							int helped = rs.getInt("helped");
-							double median = rs.getDouble("median_tick");
-							Double medianOrNull = rs.wasNull() ? null : median;
-							long dc = rs.getLong("dc");
-							long lc = rs.getLong("lc");
-							int recN = rs.getInt("rec_n");
-							double[] ci = WilsonInterval.of(helped, n);
-							return new Cellrow(rs.getString("scenario"),
-									new Row(rs.getString("model"), rs.getString("condition"), n, helped,
-											(double) helped / n, ci[0], ci[1], (double) rs.getInt("early") / n,
-											medianOrNull, dc == 0 ? 0 : (double) rs.getLong("pf") / dc,
-											lc == 0 ? 0 : (double) rs.getLong("tr") / lc,
-											recN == 0 ? null : (double) rs.getInt("rec") / recN));
-						}).list();
+		List<String> populations = props.studyPopulations();
+		List<World> worlds = populations.isEmpty() ? List.of()
+				: jdbc.sql(SQL).param("promptVersion", props.promptVersion()).param("populations", populations)
+						.query((rs, i) -> new World(rs.getString("model"), rs.getString("condition"),
+								(Double) rs.getObject("accuracy"), rs.getInt("parse_failures"),
+								rs.getInt("truncations"), rs.getInt("llm_call_count"), rs.getInt("probe_count"),
+								rs.getInt("recognised_sample")))
+						.list();
 
-		List<ScenarioResults> scenarios = new ArrayList<>();
-		for (String scenario : SCENARIOS) {
+		List<String> conditions = RunScenarios.CONDITIONS.get(RunScenarios.SCENARIO);
+		List<PopulationResults> out = new ArrayList<>();
+		for (String population : populations) {
 			List<Row> rows = new ArrayList<>();
 			List<Difference> diffs = new ArrayList<>();
-			for (String model : models) {
-				List<String> conditions = RunScenarios.CONDITIONS.get(scenario);
-				for (String condition : conditions) {
-					find(cells, scenario, model, condition).ifPresent(rows::add);
+			double[] baseline = accuracies(worlds, population, conditions.get(0));
+			for (String condition : conditions) {
+				List<World> cell = worlds.stream()
+						.filter(w -> w.population().equals(population) && w.condition().equals(condition)).toList();
+				double[] acc = accuracies(worlds, population, condition);
+				if (cell.isEmpty() || acc.length == 0) {
+					continue;
 				}
-				String base = conditions.get(0);
-				for (String condition : conditions.subList(1, conditions.size())) {
-					diff(cells, scenario, model, condition + "-" + base, condition, base).ifPresent(diffs::add);
+				double[] ci = BootstrapInterval.mean(acc);
+				long calls = cell.stream().mapToLong(World::calls).sum();
+				long probes = cell.stream().mapToLong(World::probes).sum();
+				rows.add(new Row(condition, cell.size(), ci[0], ci[1], ci[2],
+						calls == 0 ? 0 : (double) cell.stream().mapToLong(World::parseFailures).sum() / calls,
+						calls == 0 ? 0 : (double) cell.stream().mapToLong(World::truncations).sum() / calls,
+						probes == 0 ? null : (double) cell.stream().mapToLong(World::recognised).sum() / probes));
+				if (!condition.equals(conditions.get(0)) && baseline.length > 0) {
+					double[] d = BootstrapInterval.difference(acc, baseline);
+					diffs.add(new Difference(condition + "-" + conditions.get(0), d[0], d[1], d[2]));
 				}
 			}
-			scenarios.add(new ScenarioResults(scenario, rows, diffs));
+			out.add(new PopulationResults(population, rows, diffs));
 		}
-		return new ResultsResponse(scenarios, props.traceLinks());
+		return new ResultsResponse(out, props.traceLinks());
 	}
 
-	private static Optional<Row> find(List<Cellrow> cells, String scenario, String model, String condition) {
-		return cells.stream().filter(c -> c.scenario().equals(scenario) && c.row().model().equals(model)
-				&& c.row().condition().equals(condition)).map(Cellrow::row).findFirst();
-	}
-
-	private static Optional<Difference> diff(List<Cellrow> cells, String scenario, String model, String label,
-			String higher, String lower) {
-		Optional<Row> a = find(cells, scenario, model, higher);
-		Optional<Row> b = find(cells, scenario, model, lower);
-		if (a.isEmpty() || b.isEmpty()) {
-			return Optional.empty();
-		}
-		double[] d = NewcombeInterval.difference(a.get().helped(), a.get().n(), b.get().helped(), b.get().n());
-		return Optional.of(new Difference(model, label, d[0], d[1], d[2]));
+	private static double[] accuracies(List<World> worlds, String population, String condition) {
+		return worlds.stream().filter(w -> w.population().equals(population) && w.condition().equals(condition)
+				&& w.accuracy() != null).mapToDouble(World::accuracy).toArray();
 	}
 }

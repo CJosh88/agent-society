@@ -24,3 +24,14 @@ Choices the design doc leaves open, and changes made to the repo. One entry each
 
 - `docs/prior-art.md` holds the queries, the papers opened and the verdict. The novelty and Stage 2 claims in the design doc were narrowed to match, and a harmful and beneficial revision measure was added.
 - Reason for the added measure: Qu et al. and KAIROS use it, and the paired world seeds give a counterfactual rating for the same position and ticket in the `independent` world.
+
+## C1 API choices (2026-11-23)
+
+- **REST names.** `population` and `worldSeed` replace `model` and `seed` in REST responses, and the runs list filters on `population`. The database columns `runs.model` and `runs.seed` keep their names and hold the population label and world seed.
+- **Derived fields.** `accuracy` is correct ratings over all ratings in the world, scripted agents included, and is null when a world has no ratings. `rated_count`, `parse_failures` (count of `ACTION_PARSE_FAILED` events), `truncations` and `llm_call_count` are stored too. Two columns beyond the doc: `probe_count` and `recognised_sample` (probes answered with `recognized` true), so a recognition rate is `recognised_sample / probe_count`.
+- **Dropped v0.3 columns.** `focal_helped`, `early_help`, `focal_help_tick`, `decision_count`, `recognized`.
+- **Counting rules in `BundleValidator`.** Agents are `a1..aN` with no gaps and the number is the position. Each agent event carries `tick` equal to its position, and `PROBE_ANSWERED` and `RUN_ENDED` carry the last position N. `TICKETS_SHOWN.counts` is null exactly when the condition is `independent`. Scripted agents are `a1..ak` with 1 <= k <= 20 in `seeded_wrong` and none elsewhere (k is not pinned to 20 so small test worlds validate). An agent's ratings are exactly its four picked tickets, once each. `seeded_wrong` with a `mix_` population is rejected, as the schema does.
+- **Results.** One entry per configured population. Each row has mean world accuracy with a 95% percentile bootstrap interval over worlds (4,000 resamples, fixed seed so numbers are stable), plus parse-failure, truncation and recognition rates. Differences are each condition minus `independent`, with a bootstrap interval resampling each group. Parse-failure and truncation rates are per LLM call. The KL, unpredictability, early-mover and self-correction measures stay in the Python analysis (C5).
+- **Files not in the Target files table.** `…/results/BootstrapInterval.java` and `BootstrapIntervalTest.java` replace `WilsonInterval` and `NewcombeInterval` (removed: they were for binomial rates, which this study no longer reports).
+- **Deferred to C3.** The static pages and `StaticPagesIT` are not copied yet; the v0.3 pages describe the old contract. CI has only the `api` job until C2 adds the engine.
+- **Property rename.** `asl.study-models` is now `asl.study-populations` (env `ASL_STUDY_POPULATIONS`), default the five study populations, `prompt-version: c1`.

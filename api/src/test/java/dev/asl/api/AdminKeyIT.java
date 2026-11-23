@@ -24,7 +24,7 @@ class AdminKeyIT {
 	MockMvc mvc;
 
 	private String body() {
-		return Fixtures.json(Fixtures.withNewId(Fixtures.triage()));
+		return Fixtures.json(Fixtures.withNewId(Fixtures.weak()));
 	}
 
 	@Test
@@ -49,7 +49,7 @@ class AdminKeyIT {
 
 	@Test
 	void shortKeyFailsStartup() {
-		AslProperties props = new AslProperties("too-short", null, "v2", null, null);
+		AslProperties props = new AslProperties("too-short", null, "c1", null, null);
 		assertThatThrownBy(() -> new AdminKeyInterceptor(props)).isInstanceOf(IllegalStateException.class);
 	}
 }
