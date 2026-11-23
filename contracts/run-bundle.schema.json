@@ -1,0 +1,715 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-society-lab/contracts/run-bundle.schema.json",
+  "title": "RunBundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run",
+    "agents",
+    "events",
+    "llm_calls"
+  ],
+  "properties": {
+    "run": {
+      "$ref": "#/$defs/run"
+    },
+    "agents": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/agent"
+      }
+    },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/event"
+      }
+    },
+    "llm_calls": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/llm_call"
+      }
+    }
+  },
+  "$defs": {
+    "timestamp": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$"
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "experiment",
+        "scenario",
+        "condition",
+        "model",
+        "seed",
+        "prompt_version",
+        "engine_version",
+        "pilot",
+        "started_at",
+        "ended_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "experiment": {
+          "const": "agent_society_v2"
+        },
+        "scenario": {
+          "enum": [
+            "alert_fatigue",
+            "triage_herding"
+          ]
+        },
+        "condition": {
+          "enum": [
+            "calm",
+            "fatigue_3",
+            "fatigue_6",
+            "alone",
+            "dismiss",
+            "endorse"
+          ]
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "prompt_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "engine_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pilot": {
+          "type": "boolean"
+        },
+        "started_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "ended_at": {
+          "$ref": "#/$defs/timestamp"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "scenario": {
+                "const": "alert_fatigue"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "condition": {
+                "enum": [
+                  "calm",
+                  "fatigue_3",
+                  "fatigue_6"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "scenario": {
+                "const": "triage_herding"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "condition": {
+                "enum": [
+                  "alone",
+                  "dismiss",
+                  "endorse"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "persona": {
+      "oneOf": [
+        {
+          "type": "object",
+          "maxProperties": 0
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "persona_id",
+            "name",
+            "age",
+            "occupation",
+            "big5",
+            "bio"
+          ],
+          "properties": {
+            "persona_id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "age": {
+              "type": "integer",
+              "minimum": 22,
+              "maximum": 68
+            },
+            "occupation": {
+              "type": "string"
+            },
+            "big5": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "O",
+                "C",
+                "E",
+                "A",
+                "N"
+              ],
+              "properties": {
+                "O": {
+                  "enum": [
+                    "high",
+                    "low"
+                  ]
+                },
+                "C": {
+                  "enum": [
+                    "high",
+                    "low"
+                  ]
+                },
+                "E": {
+                  "enum": [
+                    "high",
+                    "low"
+                  ]
+                },
+                "A": {
+                  "enum": [
+                    "high",
+                    "low"
+                  ]
+                },
+                "N": {
+                  "enum": [
+                    "high",
+                    "low"
+                  ]
+                }
+              }
+            },
+            "bio": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent_id",
+        "name",
+        "role",
+        "persona"
+      ],
+      "properties": {
+        "agent_id": {
+          "type": "string",
+          "pattern": "^(focal|s[1-4])$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "enum": [
+            "focal",
+            "scripted"
+          ]
+        },
+        "persona": {
+          "$ref": "#/$defs/persona"
+        }
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "seq",
+        "tick",
+        "type",
+        "agent_id",
+        "payload"
+      ],
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tick": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12
+        },
+        "type": {
+          "enum": [
+            "AGENT_SPAWNED",
+            "NOTICE_SHOWN",
+            "AGENT_SAID",
+            "AGENT_WAITED",
+            "AGENT_CALLED",
+            "AGENT_PRIORITY_SET",
+            "ACTION_PARSE_FAILED",
+            "PROBE_ANSWERED",
+            "RUN_ENDED"
+          ]
+        },
+        "agent_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^(focal|s[1-4])$"
+        },
+        "payload": {
+          "type": "object"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AGENT_SPAWNED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "tick": {
+                "const": 0
+              },
+              "agent_id": {
+                "type": "string"
+              },
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "seat"
+                ],
+                "properties": {
+                  "seat": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "NOTICE_SHOWN"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "agent_id": {
+                "type": "null"
+              },
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "text",
+                  "real"
+                ],
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "alert",
+                      "ticket"
+                    ]
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "real": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AGENT_SAID"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "agent_id": {
+                "type": "string"
+              },
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "text",
+                  "thought",
+                  "scripted"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  },
+                  "thought": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "scripted": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AGENT_WAITED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "agent_id": {
+                "type": "string"
+              },
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "thought",
+                  "scripted"
+                ],
+                "properties": {
+                  "thought": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "scripted": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AGENT_CALLED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "agent_id": {
+                "const": "focal"
+              },
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "text",
+                  "thought",
+                  "counts_as_help"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  },
+                  "thought": {
+                    "type": "string"
+                  },
+                  "counts_as_help": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AGENT_PRIORITY_SET"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "agent_id": {
+                "const": "focal"
+              },
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "priority",
+                  "thought",
+                  "counts_as_help"
+                ],
+                "properties": {
+                  "priority": {
+                    "enum": [
+                      "HIGH",
+                      "LOW"
+                    ]
+                  },
+                  "thought": {
+                    "type": "string"
+                  },
+                  "counts_as_help": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ACTION_PARSE_FAILED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "agent_id": {
+                "const": "focal"
+              },
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "raw_excerpt",
+                  "truncated"
+                ],
+                "properties": {
+                  "raw_excerpt": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "truncated": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "PROBE_ANSWERED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "tick": {
+                "const": 12
+              },
+              "agent_id": {
+                "const": "focal"
+              },
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "text",
+                  "recognized"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  },
+                  "recognized": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "RUN_ENDED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "tick": {
+                "const": 12
+              },
+              "agent_id": {
+                "type": "null"
+              },
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "reason": {
+                    "const": "max_ticks"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "llm_call": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent_id",
+        "tick",
+        "kind",
+        "attempt",
+        "prompt",
+        "response_text",
+        "reasoning_text",
+        "finish_reason",
+        "input_tokens",
+        "output_tokens",
+        "tokens_estimated",
+        "parsed_ok",
+        "latency_ms"
+      ],
+      "properties": {
+        "agent_id": {
+          "type": "string",
+          "pattern": "^(focal|s[1-4])$"
+        },
+        "tick": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12
+        },
+        "kind": {
+          "enum": [
+            "decision",
+            "probe"
+          ]
+        },
+        "attempt": {
+          "enum": [
+            1,
+            2
+          ]
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "response_text": {
+          "type": "string"
+        },
+        "reasoning_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "finish_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "input_tokens": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "output_tokens": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "tokens_estimated": {
+          "type": "boolean"
+        },
+        "parsed_ok": {
+          "type": "boolean"
+        },
+        "latency_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}
