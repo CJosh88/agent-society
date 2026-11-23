@@ -17,6 +17,7 @@
     "agents": {
       "type": "array",
       "minItems": 1,
+      "maxItems": 200,
       "items": {
         "$ref": "#/$defs/agent"
       }
@@ -48,8 +49,8 @@
         "experiment",
         "scenario",
         "condition",
-        "model",
-        "seed",
+        "population",
+        "world_seed",
         "prompt_version",
         "engine_version",
         "pilot",
@@ -63,29 +64,32 @@
           "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
         },
         "experiment": {
-          "const": "agent_society_v2"
+          "const": "cascade_v1"
         },
         "scenario": {
           "enum": [
-            "alert_fatigue",
-            "triage_herding"
+            "triage_cascade"
           ]
         },
         "condition": {
           "enum": [
-            "calm",
-            "fatigue_3",
-            "fatigue_6",
-            "alone",
-            "dismiss",
-            "endorse"
+            "independent",
+            "weak",
+            "strong",
+            "seeded_wrong"
           ]
         },
-        "model": {
-          "type": "string",
-          "minLength": 1
+        "population": {
+          "enum": [
+            "llama-3.1-8b",
+            "gpt-oss-120b",
+            "claude-haiku-5-5",
+            "mix_early",
+            "mix_late",
+            "fake"
+          ]
         },
-        "seed": {
+        "world_seed": {
           "type": "integer",
           "minimum": 0
         },
@@ -111,39 +115,20 @@
         {
           "if": {
             "properties": {
-              "scenario": {
-                "const": "alert_fatigue"
+              "condition": {
+                "const": "seeded_wrong"
               }
             }
           },
           "then": {
             "properties": {
-              "condition": {
-                "enum": [
-                  "calm",
-                  "fatigue_3",
-                  "fatigue_6"
-                ]
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "scenario": {
-                "const": "triage_herding"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "condition": {
-                "enum": [
-                  "alone",
-                  "dismiss",
-                  "endorse"
-                ]
+              "population": {
+                "not": {
+                  "enum": [
+                    "mix_early",
+                    "mix_late"
+                  ]
+                }
               }
             }
           }
@@ -244,7 +229,7 @@
       "properties": {
         "agent_id": {
           "type": "string",
-          "pattern": "^(focal|s[1-4])$"
+          "pattern": "^a([1-9][0-9]?|1[0-9]{2}|200)$"
         },
         "name": {
           "type": "string",
@@ -252,7 +237,7 @@
         },
         "role": {
           "enum": [
-            "focal",
+            "agent",
             "scripted"
           ]
         },
@@ -278,17 +263,15 @@
         },
         "tick": {
           "type": "integer",
-          "minimum": 0,
-          "maximum": 12
+          "minimum": 1,
+          "maximum": 200
         },
         "type": {
           "enum": [
             "AGENT_SPAWNED",
-            "NOTICE_SHOWN",
-            "AGENT_SAID",
-            "AGENT_WAITED",
-            "AGENT_CALLED",
-            "AGENT_PRIORITY_SET",
+            "TICKETS_SHOWN",
+            "AGENT_PICKED",
+            "AGENT_RATED",
             "ACTION_PARSE_FAILED",
             "PROBE_ANSWERED",
             "RUN_ENDED"
@@ -299,7 +282,7 @@
             "string",
             "null"
           ],
-          "pattern": "^(focal|s[1-4])$"
+          "pattern": "^a([1-9][0-9]?|1[0-9]{2}|200)$"
         },
         "payload": {
           "type": "object"
@@ -316,91 +299,132 @@
           },
           "then": {
             "properties": {
-              "tick": {
-                "const": 0
-              },
-              "agent_id": {
-                "type": "string"
-              },
               "payload": {
                 "type": "object",
                 "additionalProperties": false,
                 "required": [
-                  "seat"
+                  "position",
+                  "model"
                 ],
                 "properties": {
-                  "seat": {
+                  "position": {
                     "type": "integer",
-                    "minimum": 0
+                    "minimum": 1,
+                    "maximum": 200
+                  },
+                  "model": {
+                    "type": "string",
+                    "minLength": 1
                   }
                 }
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "NOTICE_SHOWN"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "agent_id": {
-                "type": "null"
               },
-              "payload": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "kind",
-                  "text",
-                  "real"
-                ],
-                "properties": {
-                  "kind": {
-                    "enum": [
-                      "alert",
-                      "ticket"
-                    ]
-                  },
-                  "text": {
-                    "type": "string"
-                  },
-                  "real": {
-                    "type": "boolean"
-                  }
-                }
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "AGENT_SAID"
-              }
-            }
-          },
-          "then": {
-            "properties": {
               "agent_id": {
                 "type": "string"
-              },
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "TICKETS_SHOWN"
+              }
+            }
+          },
+          "then": {
+            "properties": {
               "payload": {
                 "type": "object",
                 "additionalProperties": false,
                 "required": [
-                  "text",
+                  "order",
+                  "counts"
+                ],
+                "properties": {
+                  "order": {
+                    "type": "array",
+                    "minItems": 24,
+                    "maxItems": 24,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "pattern": "^T(0[1-9]|1[0-9]|2[0-4])$"
+                    }
+                  },
+                  "counts": {
+                    "oneOf": [
+                      {
+                        "type": "null"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "minProperties": 24,
+                        "maxProperties": 24,
+                        "propertyNames": {
+                          "type": "string",
+                          "pattern": "^T(0[1-9]|1[0-9]|2[0-4])$"
+                        },
+                        "patternProperties": {
+                          "^T(0[1-9]|1[0-9]|2[0-4])$": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "high",
+                              "total"
+                            ],
+                            "properties": {
+                              "high": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "total": {
+                                "type": "integer",
+                                "minimum": 0
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "agent_id": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AGENT_PICKED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ticket_ids",
                   "thought",
                   "scripted"
                 ],
                 "properties": {
-                  "text": {
-                    "type": "string"
+                  "ticket_ids": {
+                    "type": "array",
+                    "minItems": 4,
+                    "maxItems": 4,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "pattern": "^T(0[1-9]|1[0-9]|2[0-4])$"
+                    }
                   },
                   "thought": {
                     "type": [
@@ -412,41 +436,9 @@
                     "type": "boolean"
                   }
                 }
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "AGENT_WAITED"
-              }
-            }
-          },
-          "then": {
-            "properties": {
+              },
               "agent_id": {
                 "type": "string"
-              },
-              "payload": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "thought",
-                  "scripted"
-                ],
-                "properties": {
-                  "thought": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "scripted": {
-                    "type": "boolean"
-                  }
-                }
               }
             }
           }
@@ -455,73 +447,38 @@
           "if": {
             "properties": {
               "type": {
-                "const": "AGENT_CALLED"
+                "const": "AGENT_RATED"
               }
             }
           },
           "then": {
             "properties": {
-              "agent_id": {
-                "const": "focal"
-              },
               "payload": {
                 "type": "object",
                 "additionalProperties": false,
                 "required": [
-                  "text",
-                  "thought",
-                  "counts_as_help"
-                ],
-                "properties": {
-                  "text": {
-                    "type": "string"
-                  },
-                  "thought": {
-                    "type": "string"
-                  },
-                  "counts_as_help": {
-                    "type": "boolean"
-                  }
-                }
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "AGENT_PRIORITY_SET"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "agent_id": {
-                "const": "focal"
-              },
-              "payload": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
+                  "ticket_id",
                   "priority",
-                  "thought",
-                  "counts_as_help"
+                  "correct"
                 ],
                 "properties": {
+                  "ticket_id": {
+                    "type": "string",
+                    "pattern": "^T(0[1-9]|1[0-9]|2[0-4])$"
+                  },
                   "priority": {
                     "enum": [
                       "HIGH",
                       "LOW"
                     ]
                   },
-                  "thought": {
-                    "type": "string"
-                  },
-                  "counts_as_help": {
+                  "correct": {
                     "type": "boolean"
                   }
                 }
+              },
+              "agent_id": {
+                "type": "string"
               }
             }
           }
@@ -536,9 +493,6 @@
           },
           "then": {
             "properties": {
-              "agent_id": {
-                "const": "focal"
-              },
               "payload": {
                 "type": "object",
                 "additionalProperties": false,
@@ -555,6 +509,9 @@
                     "type": "boolean"
                   }
                 }
+              },
+              "agent_id": {
+                "type": "string"
               }
             }
           }
@@ -569,12 +526,6 @@
           },
           "then": {
             "properties": {
-              "tick": {
-                "const": 12
-              },
-              "agent_id": {
-                "const": "focal"
-              },
               "payload": {
                 "type": "object",
                 "additionalProperties": false,
@@ -590,6 +541,9 @@
                     "type": "boolean"
                   }
                 }
+              },
+              "agent_id": {
+                "type": "string"
               }
             }
           }
@@ -604,12 +558,6 @@
           },
           "then": {
             "properties": {
-              "tick": {
-                "const": 12
-              },
-              "agent_id": {
-                "type": "null"
-              },
               "payload": {
                 "type": "object",
                 "additionalProperties": false,
@@ -618,9 +566,12 @@
                 ],
                 "properties": {
                   "reason": {
-                    "const": "max_ticks"
+                    "const": "all_agents_done"
                   }
                 }
+              },
+              "agent_id": {
+                "type": "null"
               }
             }
           }
@@ -648,12 +599,12 @@
       "properties": {
         "agent_id": {
           "type": "string",
-          "pattern": "^(focal|s[1-4])$"
+          "pattern": "^a([1-9][0-9]?|1[0-9]{2}|200)$"
         },
         "tick": {
           "type": "integer",
-          "minimum": 0,
-          "maximum": 12
+          "minimum": 1,
+          "maximum": 200
         },
         "kind": {
           "enum": [

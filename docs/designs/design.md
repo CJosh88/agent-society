@@ -155,9 +155,9 @@ A copy of the v0.3 architecture with one structural change: the unit of work is 
 - `experiment` const `cascade_v1`. `scenario` enum `triage_cascade`.
 - `condition` enum `independent`, `weak`, `strong`, `seeded_wrong`. A run-level check ties each to the scenario.
 - `population` (string) replaces the single model: one of `llama-3.1-8b`, `gpt-oss-120b`, `claude-haiku-5-5`, `mix_early`, `mix_late`, or `fake`. The API keeps a `model` column for the population label.
-- `world_seed` replaces `seed`.
+- `world_seed` replaces `seed` in the bundle; the database column stays `seed`.
 - Agent roles: `agent` and `scripted`. `agent_id` pattern `^a[0-9]{1,3}$`, positions 1–200.
-- Event types: `AGENT_SPAWNED{position, model}`, `TICKETS_SHOWN{counts}` (only when counts are shown), `AGENT_RATED{ticket_id, priority, correct}`, `AGENT_PICKED{ticket_ids}`, `ACTION_PARSE_FAILED`, `PROBE_ANSWERED`, `RUN_ENDED`. All carry `tick` = the agent position.
+- Event types: `AGENT_SPAWNED{position, model}`, `TICKETS_SHOWN{order, counts}` (every agent, `counts` is null in `independent`), `AGENT_PICKED{ticket_ids, thought, scripted}`, `AGENT_RATED{ticket_id, priority, correct}`, `ACTION_PARSE_FAILED{raw_excerpt, truncated}`, `PROBE_ANSWERED{text, recognized}`, `RUN_ENDED{reason}`. Agent events carry `tick` = the agent's position (1–200). `PROBE_ANSWERED` and `RUN_ENDED` carry the last position.
 - Derived fields stored on `runs` at ingest: `accuracy`, `rated_count`, `parse_failures`, `recognised_sample`.
 
 Ingest is one `@Transactional` method, `Run` and `Agent` implement `Persistable`, and a repeated post returns 409 (treated as done by the client). The run id is `uuid5` of `population|scenario|condition|world_seed|prompt_version`.
