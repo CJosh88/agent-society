@@ -6,6 +6,7 @@ Never set temperature, top_p, top_k or seed: every model runs at its provider de
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import random
 import re
@@ -18,7 +19,7 @@ from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.outputs import ChatGeneration, ChatResult
 from tenacity import AsyncRetrying, retry_if_exception, stop_after_attempt, wait_exponential
 
-from . import scenarios, scripts
+from . import scenarios
 from .budget import Budget
 from .config import (
     CLIENT_MAX_RETRIES,
@@ -27,6 +28,7 @@ from .config import (
     MODEL_REGISTRY,
     cf_base_url,
 )
+from .tickets import is_serious
 
 # Waits 1, 4 and 16 seconds between the 3 retries. Tests replace this with wait_none().
 RETRY_WAIT = wait_exponential(multiplier=1, exp_base=4)
@@ -45,16 +47,17 @@ class LlmResult:
 
 # --- Fake model -------------------------------------------------------------------------------
 
-# Chance per tick that the fake model does the outcome action once it is on the table.
-ESCALATE_PROBABILITY = {"calm": 0.80, "fatigue_3": 0.55, "fatigue_6": 0.35}  # a call once the real alert shows
-FALSE_CALL_PROBABILITY = 0.04  # a call during the false alarms
-PRIORITY_PROBABILITY = 0.5  # a priority is set on a given tick after the ticket arrives
-HIGH_PROBABILITY = {"alone": 0.85, "dismiss": 0.30, "endorse": 0.95}
+# Chance of rating a ticket HIGH when it is serious or routine, before any counts are shown.
+BASE_HIGH = {True: 0.85, False: 0.15}
+FOLLOW_WEIGHT = 0.5  # with counts shown, this share of the HIGH chance comes from the earlier ratings
 MALFORMED_PROBABILITY = 0.05
+
+_TICKET_LINE = re.compile(r"^- (T\d{2}): ", re.MULTILINE)
+_COUNT_LINE = re.compile(r"Rated HIGH by teammates so far: (\d+) of (\d+)\.")
 
 
 class FakeScriptedChatModel(BaseChatModel):
-    """Deterministic stand-in so M0-M3 pass with no network. Seeded from sha256, never Python hash()."""
+    """Deterministic stand-in so C0-C3 pass with no network. Seeded from sha256, never Python hash()."""
 
     run_seed: int = 0
 
@@ -75,36 +78,23 @@ class FakeScriptedChatModel(BaseChatModel):
 
     def _reply(self, prompt: str) -> str:
         if scenarios.PROBE_QUESTION in prompt:
-            return "No."
-        m = re.search(r"Turn (\d+) of 12", prompt)
-        tick = int(m.group(1)) if m else 0
+            return "I was sorting a support queue."
         attempt = 2 if "Your reply could not be used" in prompt else 1
-        digest = hashlib.sha256(f"{self.run_seed}|focal|{tick}|{attempt}|{prompt}".encode()).digest()
+        digest = hashlib.sha256(f"{self.run_seed}|{attempt}|{prompt}".encode()).digest()
         rng = random.Random(int.from_bytes(digest[:8], "big"))
-
-        scenario = "alert_fatigue" if scenarios.SCENE_LINES["alert_fatigue"] in prompt else "triage_herding"
         if rng.random() < MALFORMED_PROBABILITY:
-            return 'Let me think about this. {"action": '
+            return 'Let me think about this. {"picks": '
 
-        if scenario == "alert_fatigue":
-            if scenarios.REAL_ALERT in prompt:
-                condition = {0: "calm", 3: "fatigue_3"}.get(prompt.count(scenarios.FALSE_SUFFIX), "fatigue_6")
-                if rng.random() < ESCALATE_PROBABILITY[condition]:
-                    return '{"action": "CALL", "text": "Payment provider support, card payments are failing.", "thought": "This one is still firing."}'
-            elif scenarios.FALSE_SUFFIX in prompt and rng.random() < FALSE_CALL_PROBABILITY:
-                return '{"action": "CALL", "text": "Manager, an alert fired, please look.", "thought": "Better safe than sorry."}'
-            return '{"action": "WAIT", "thought": "Nothing needs me yet."}'
-
-        if scenarios.ALONE_LINE in prompt:
-            condition = "alone"
-        else:
-            condition = "dismiss" if scripts.COMMENTS["dismiss"][0] in prompt else "endorse"
-        if scenarios.TICKET in prompt and rng.random() < PRIORITY_PROBABILITY:
-            high = rng.random() < HIGH_PROBABILITY[condition]
-            return f'{{"action": "SET_PRIORITY", "priority": "{"HIGH" if high else "LOW"}", "thought": "That is my call."}}'
-        if scenarios.TICKET in prompt and rng.random() < 0.10:
-            return '{"action": "SAY", "text": "Let me look at this one.", "thought": "Just making conversation."}'
-        return '{"action": "WAIT", "thought": "Nothing to do right now."}'
+        shown = _TICKET_LINE.findall(prompt)
+        counts = [(int(h), int(t)) for h, t in _COUNT_LINE.findall(prompt)]
+        picked = rng.sample(range(len(shown)), 4)
+        picks = []
+        for i in picked:
+            p_high = BASE_HIGH[is_serious(shown[i])]
+            if counts and counts[i][1] > 0:
+                p_high = (1 - FOLLOW_WEIGHT) * p_high + FOLLOW_WEIGHT * counts[i][0] / counts[i][1]
+            picks.append({"ticket": shown[i], "priority": "HIGH" if rng.random() < p_high else "LOW"})
+        return json.dumps({"picks": picks, "thought": "These look like the ones to settle first."})
 
 
 # --- Real models ------------------------------------------------------------------------------

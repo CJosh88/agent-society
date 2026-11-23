@@ -1,38 +1,30 @@
-from asl_engine.models import extract_action
+from asl_engine.models import extract_picks
+
+FOUR = '{"picks": [{"ticket": "T01", "priority": "HIGH"}, {"ticket": "T02", "priority": "low"}], "thought": "hm"}'
 
 
-def test_plain_json():
-    a = extract_action('{"action": "WAIT", "thought": "hm"}')
-    assert a.action == "WAIT" and a.thought == "hm"
+def test_plain_json_and_case_is_normalised():
+    a = extract_picks('{"picks": [{"ticket": "t07", "priority": "low"}], "thought": "hm"}')
+    assert a.picks[0].ticket == "T07" and a.picks[0].priority == "LOW" and a.thought == "hm"
 
 
 def test_json_inside_prose_and_code_fence():
-    a = extract_action('Sure, here you go:\n```json\n{"action": "SAY", "text": "Hello", "thought": "x"}\n```\nDone.')
-    assert a.action == "SAY" and a.text == "Hello"
+    a = extract_picks(f"Sure, here you go:\n```json\n{FOUR}\n```\nDone.")
+    assert [p.ticket for p in a.picks] == ["T01", "T02"]
 
 
 def test_takes_the_last_valid_candidate():
-    text = '{"action": "WAIT"} then I changed my mind {"action": "SET_PRIORITY", "priority": "HIGH"}'
-    a = extract_action(text)
-    assert a.action == "SET_PRIORITY" and a.priority == "HIGH"
+    text = '{"picks": [{"ticket": "T01", "priority": "HIGH"}]} then I changed my mind ' + FOUR
+    assert len(extract_picks(text).picks) == 2
 
 
 def test_last_candidate_that_is_invalid_does_not_hide_an_earlier_valid_one():
-    text = '{"action": "CALL", "text": "Manager, help"} and also {"action": "DANCE"}'
-    assert extract_action(text).action == "CALL"
+    text = FOUR + ' and also {"picks": [{"ticket": "T03", "priority": "MEDIUM"}]}'
+    assert [p.ticket for p in extract_picks(text).picks] == ["T01", "T02"]
 
 
 def test_no_json_or_truncated_json_gives_none():
-    assert extract_action("I would simply wait.") is None
-    assert extract_action('{"action": "WAI') is None
-    assert extract_action("") is None
-
-
-def test_json_that_is_not_an_object_or_lacks_action_gives_none():
-    assert extract_action("[1, 2, 3]") is None
-    assert extract_action('{"thought": "only a thought"}') is None
-
-
-def test_nested_braces_do_not_confuse_the_scan():
-    a = extract_action('{"note": {"x": 1}} {"action": "CALL", "text": "help {now}", "thought": ""}')
-    assert a.action == "CALL" and a.text == "help {now}"
+    assert extract_picks("I would simply pick T01.") is None
+    assert extract_picks('{"picks": [{"ticket": "T0') is None
+    assert extract_picks("") is None
+    assert extract_picks('{"action": "WAIT"}') is None

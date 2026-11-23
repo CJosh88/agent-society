@@ -1,66 +1,41 @@
-"""Rendered prompts must never contain the banned words. The recognition probe question is checked too."""
+"""Rendered prompts never contain a banned word, in any condition. The probe question is checked too."""
 
 import pytest
 
 from asl_engine import scenarios
-from asl_engine.config import SCENARIO_CONDITIONS, SCENARIOS
+from asl_engine.config import CONDITIONS
+from asl_engine.graph import run_one
 from asl_engine.personas import load_personas
-from asl_engine.scripts import COMMENTS
-
-PERSONAS = load_personas()
-CELLS = [(s, c) for s in SCENARIOS for c in SCENARIO_CONDITIONS[s]]
+from asl_engine.scenarios import BANNED_WORDS
 
 
-def _view(scenario: str, tick: int) -> dict:
-    notices = [(t, n["text"]) for t, n in scenarios.notice_schedule(scenario, SCENARIO_CONDITIONS[scenario][-1], [0, 1, 2, 3, 4, 5]).items() if t <= tick]
-    return {
-        "scenario": scenario, "tick": tick, "notices": notices,
-        "chat": [("Tom Reyes", COMMENTS["dismiss"][0])] if scenario == "triage_herding" else [],
-        "history": ["WAIT", 'SAY "hi"'],
-    }
+def test_the_matcher_catches_whole_words_only():
+    for w in ("experiment", "Study", "TEST", "simulation", "herding", "Fatigue", "cascade", "popularity", "majority",
+              "Asch", "Latané", "Latane", "bystander", "conformity"):
+        assert BANNED_WORDS.search(f"this is {w} here"), w
+    for ok in ("tested", "latest", "stud", "majorities", "contest", "fatigued"):
+        assert not BANNED_WORDS.search(f"this is {ok} here"), ok
 
 
-@pytest.mark.parametrize("scenario, condition", CELLS)
-def test_no_banned_word_in_any_rendered_prompt(scenario, condition):
-    others = [p.name for p in PERSONAS[1:5]] if condition in ("dismiss", "endorse") else []
-    for persona in PERSONAS:
-        text = scenarios.system_prompt(scenario, condition, persona, others)
-        assert not scenarios.BANNED_WORDS.search(text), (persona.persona_id, scenarios.BANNED_WORDS.search(text))
-    for tick in range(1, 13):
-        text = scenarios.user_prompt(_view(scenario, tick)) + scenarios.retry_line("no valid JSON action found")
-        assert not scenarios.BANNED_WORDS.search(text)
+def test_fixed_prompt_text_is_clean():
+    for text in (scenarios.SCENE_LINE, scenarios.MENU, scenarios.SORTED_LINE, scenarios.PROBE_QUESTION,
+                 scenarios.retry_line("the four tickets must be different")):
+        assert BANNED_WORDS.search(text) is None, text
 
 
-@pytest.mark.parametrize("scenario", SCENARIOS)
-def test_fixed_text_is_clean(scenario):
-    texts = [scenarios.SCENE_LINES[scenario], scenarios.action_menu(scenario), scenarios.PROBE_QUESTION,
-             scenarios.probe_context(scenario), scenarios.ALONE_LINE]
-    texts += [n["text"] for c in SCENARIO_CONDITIONS[scenario]
-              for n in scenarios.notice_schedule(scenario, c, [0, 1, 2, 3, 4, 5]).values()]
-    texts += list(scenarios.FALSE_ALERTS) + [t for cs in COMMENTS.values() for t in cs]
-    for t in texts:
-        assert not scenarios.BANNED_WORDS.search(t), t
+def test_every_persona_card_is_clean():
+    assert [p.name for p in load_personas() if BANNED_WORDS.search(scenarios.persona_card(p))] == []
 
 
-def test_the_probe_question_does_not_hint_at_studies():
-    assert not scenarios.BANNED_WORDS.search(scenarios.PROBE_QUESTION)
-    assert "study" not in scenarios.PROBE_QUESTION.lower() and "story" not in scenarios.PROBE_QUESTION.lower()
+@pytest.mark.parametrize("condition", CONDITIONS)
+async def test_every_prompt_a_world_sends_is_clean(condition):
+    b = await run_one("fake", condition, 0, n_agents=20)
+    bad = [c["prompt"] for c in b["llm_calls"] if BANNED_WORDS.search(c["prompt"])]
+    assert bad == []
+    assert any(c["kind"] == "probe" for c in b["llm_calls"])
 
 
-@pytest.mark.parametrize("word", ["experiment", "Study", "TEST", "simulation", "psychology", "bystander",
-                                  "Diffusion", "Darley", "Latané", "Latane", "Genovese", "Asch", "Conformity",
-                                  "herd", "Herding", "fatigue"])
-def test_the_pattern_catches_each_banned_word_whole(word):
-    assert scenarios.BANNED_WORDS.search(f"this is a {word} here")
-
-
-def test_whole_words_only():
-    assert not scenarios.BANNED_WORDS.search("A student on a contested attestation, shepherding the herders' fatigued.")
-
-
-def test_recognition_matching():
-    assert scenarios.recognized("This resembles the Asch conformity experiment.")
-    assert scenarios.recognized("It sounds like alert fatigue, the boy who cried wolf.")
-    assert scenarios.recognized("A case of herding: everyone followed the group.")
-    assert not scenarios.recognized("No.")
-    assert not scenarios.recognized("Customers were charged twice during a provider incident.")
+def test_recognition_matcher_flags_naming_the_effect_and_not_plain_descriptions():
+    assert scenarios.recognized("This looked like a herding experiment.")
+    assert scenarios.recognized("People just follow the crowd, classic bandwagon.")
+    assert not scenarios.recognized("I was sorting a support queue and rating tickets by urgency.")

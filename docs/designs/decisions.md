@@ -35,3 +35,20 @@ Choices the design doc leaves open, and changes made to the repo. One entry each
 - **Files not in the Target files table.** `…/results/BootstrapInterval.java` and `BootstrapIntervalTest.java` replace `WilsonInterval` and `NewcombeInterval` (removed: they were for binomial rates, which this study no longer reports).
 - **Deferred to C3.** The static pages and `StaticPagesIT` are not copied yet; the v0.3 pages describe the old contract. CI has only the `api` job until C2 adds the engine.
 - **Property rename.** `asl.study-models` is now `asl.study-populations` (env `ASL_STUDY_POPULATIONS`), default the five study populations, `prompt-version: c1`.
+
+## C2 engine choices (2026-11-23)
+
+- **CLI names.** `asl run --population --condition --world-seed --agents` and `asl batch --models <populations> --runs --seed --agents` (`--models` keeps its v0.3 name but takes populations, `fake` included). `--agents` defaults to 200. `asl analyze` is removed until C5.
+- **New file `engine/src/asl_engine/world.py`** (not in the Target files table): the pure functions of `(world_seed, position)` for persona, ticket order, scripted picks, probe positions and the model per position, so they can be unit-tested and the pairing guarantee lives in one place. Each uses its own sha256-seeded stream, so a 20-agent smoke world is the first 20 positions of the 200-agent world.
+- **Test helper `engine/tests/fakes.py`:** shared stand-in chat models for the agent, graph and pairing tests.
+- **Persona draw.** Each position draws one of the 30 personas independently (with replacement), so the same persona can appear many times in a line.
+- **Sizes that scale with the world.** The scripted opening is 10% of agents capped at 20 (`--agents 20` gives 2, 200 gives 20), and the stronger model's block in the mixed lines is 30% (60 of 200, 6 of 20). Probe sample is 10 positions, or all if fewer.
+- **Scripted agents.** They pick 4 tickets at random (seeded) and rate each against the truth. They still get a `TICKETS_SHOWN` event and appear in the counts, so the world looks the same to later agents. They have `role: scripted`, `model: "scripted"` in `AGENT_SPAWNED`, and no LLM call.
+- **Parse failures.** One `ACTION_PARSE_FAILED` event per failed attempt, so a first failure that the retry fixes is still counted; an agent whose second attempt also fails has no `AGENT_PICKED` and no ratings and adds nothing to the counts. `parse_failures` in the results therefore counts attempts, not agents.
+- **`strong` sort.** Descending by HIGH share (0 when nobody has rated the ticket); ties keep the position's own random order.
+- **Probe.** For sampled positions that made a valid decision, the engine replays that agent's system prompt, user prompt and reply, then asks `PROBE_QUESTION` through the same model. Probe LLM-call rows carry the agent's position as `tick`; `PROBE_ANSWERED` carries the last position. A retry line is not part of the replayed prompt.
+- **Fake model.** Rates a shown ticket HIGH with probability 0.85 if serious and 0.15 if routine; with counts, half of that probability is replaced by the earlier HIGH share. Five percent of replies are malformed so the retry path runs. It is not meant to look like an LLM; the influence conditions only need to differ from `independent` in a checkable way (`seeded_wrong` lowers accuracy).
+- **Ticket catalogue.** `engine/data/tickets.json` is a draft: 12 serious (T01–T12) and 12 routine (T13–T24), with two alarmingly worded routine tickets (T18, T21) and calmly worded serious ones (T02, T08). Wording is tuned in C4 on `independent` pilots only.
+- **Fixed run id.** `uuid5(population|scenario|condition|world_seed|prompt_version)` has no agent count, so a 20-agent smoke world and a full world of the same cell would collide; smoke worlds use `fake`.
+- **Left-over spend.** `results/spend.json` still holds the $0.14 spent in the v0.3 pilots and counts toward `ASL_MAX_USD`.
+- **CI.** The `engine` job is added to `.github/workflows/ci.yml`.

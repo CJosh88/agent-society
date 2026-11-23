@@ -1,10 +1,9 @@
-"""The `asl` command line: make-personas, graph, run, batch, analyze."""
+"""The `asl` command line: make-personas, graph, run, batch. (`analyze` arrives in C5.)"""
 
 from __future__ import annotations
 
 import asyncio
 import json
-import os
 import random
 import time
 from pathlib import Path
@@ -13,10 +12,9 @@ import httpx
 import typer
 
 from . import config
-from .analysis import build_report, fetch_runs
 from .budget import Budget
 from .client import post_bundle
-from .config import MODEL_REGISTRY, RESULTS_DIR, SCENARIO_CONDITIONS, SCENARIOS, STUDY_MODELS
+from .config import MODEL_REGISTRY, N_AGENTS, POPULATIONS, RESULTS_DIR, conditions_for
 from .graph import build_graph, run_one
 from .llm import LLMContext, get_model
 from .personas import write_personas
@@ -32,9 +30,9 @@ def main() -> None:
     config.load_env()
 
 
-def _check_model(key: str) -> None:
-    if key not in MODEL_REGISTRY:
-        raise typer.BadParameter(f"unknown model {key!r}; choose from {', '.join(MODEL_REGISTRY)}")
+def _check_population(key: str) -> None:
+    if key not in POPULATIONS:
+        raise typer.BadParameter(f"unknown population {key!r}; choose from {', '.join(POPULATIONS)}")
 
 
 @app.command("make-personas")
@@ -47,7 +45,7 @@ def make_personas(seed: int = 42, out: Path = config.PERSONAS_PATH) -> None:
 @app.command("graph")
 def graph(out: Path = config.GRAPH_PATH) -> None:
     """Write the outer graph, with the agent subgraph expanded, as a Mermaid file."""
-    g = build_graph(LLMContext(get_model("fake", run_seed=0), "fake"))
+    g = build_graph({"fake": LLMContext(get_model("fake", run_seed=0), "fake")})
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(g.get_graph(xray=True).draw_mermaid(), encoding="utf-8")
     typer.echo(f"wrote {out}")
@@ -55,20 +53,20 @@ def graph(out: Path = config.GRAPH_PATH) -> None:
 
 @app.command("run")
 def run(
-    model: str = typer.Option(...),
-    scenario: str = typer.Option(...),
+    population: str = typer.Option(...),
     condition: str = typer.Option(...),
-    seed: int = typer.Option(...),
+    world_seed: int = typer.Option(...),
+    agents: int = typer.Option(N_AGENTS, help="Agents in the world; 200 for the study, fewer for smoke runs."),
     pilot: bool = typer.Option(False, help="Declare this a pilot: it is excluded from results."),
 ) -> None:
-    """Play one run and post it to the API."""
-    _check_model(model)
-    if scenario not in SCENARIOS or condition not in SCENARIO_CONDITIONS[scenario]:
-        raise typer.BadParameter(f"scenario must be one of {SCENARIOS}; conditions: {SCENARIO_CONDITIONS}")
+    """Play one world and post it to the API."""
+    _check_population(population)
+    if condition not in conditions_for(population):
+        raise typer.BadParameter(f"conditions for {population}: {', '.join(conditions_for(population))}")
     budget = Budget(config.max_usd())
 
     async def go() -> str:
-        bundle = await run_one(model, scenario, condition, seed, pilot=pilot, budget=budget)
+        bundle = await run_one(population, condition, world_seed, n_agents=agents, pilot=pilot, budget=budget)
         async with httpx.AsyncClient() as client:
             status = await post_bundle(client, bundle)
         return f"{status}: {bundle['run']['id']}"
@@ -79,44 +77,45 @@ def run(
 
 @app.command("batch")
 def batch(
-    models: str = typer.Option(..., help="Comma-separated model keys"),
-    runs: int = typer.Option(50, help="Seeds per cell"),
-    seed: int = typer.Option(0, help="First seed; seeds seed..seed+runs-1 are shared by every cell"),
+    models: str = typer.Option(..., help="Comma-separated populations (single models, mix_early, mix_late, fake)"),
+    runs: int = typer.Option(8, help="Worlds per cell"),
+    seed: int = typer.Option(0, help="First world seed; seeds seed..seed+runs-1 are shared by every cell"),
+    agents: int = typer.Option(N_AGENTS, help="Agents per world"),
     pilot: bool = False,
 ) -> None:
-    """Run models x scenarios x conditions x seeds in shuffled order, up to ASL_CONCURRENCY at once."""
+    """Run populations x conditions x world seeds in shuffled order, up to ASL_CONCURRENCY worlds at once."""
     keys = [m.strip() for m in models.split(",") if m.strip()]
     for k in keys:
-        _check_model(k)
-    specs = [(m, s, c, seed + i) for m in keys for s in SCENARIOS for c in SCENARIO_CONDITIONS[s] for i in range(runs)]
+        _check_population(k)
+    specs = [(pop, c, seed + i) for pop in keys for c in conditions_for(pop) for i in range(runs)]
     random.Random(seed).shuffle(specs)
     budget = Budget(config.max_usd())
-    skipped = asyncio.run(_batch(specs, pilot, budget))
+    skipped = asyncio.run(_batch(specs, agents, pilot, budget))
     budget.save()
     if skipped:
         typer.echo(f"budget of ${budget.max_usd:.2f} reached (spent ${budget.total:.2f}); {skipped} runs not started")
         raise typer.Exit(EXIT_BUDGET)
 
 
-async def _batch(specs: list[tuple[str, str, str, int]], pilot: bool, budget: Budget) -> int:
+async def _batch(specs: list[tuple[str, str, int]], agents: int, pilot: bool, budget: Budget) -> int:
     sem = asyncio.Semaphore(config.concurrency())
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     failures = RESULTS_DIR / "failures.jsonl"
     counts = {"created": 0, "exists": 0, "failed": 0, "skipped": 0}
 
-    async def one(client: httpx.AsyncClient, spec: tuple[str, str, str, int]) -> None:
-        model, scenario, condition, s = spec
+    async def one(client: httpx.AsyncClient, spec: tuple[str, str, int]) -> None:
+        population, condition, w = spec
         async with sem:
-            if budget.exceeded:  # runs already going finish; no new ones start
+            if budget.exceeded:  # worlds already going finish; no new ones start
                 counts["skipped"] += 1
                 return
             try:
-                bundle = await run_one(model, scenario, condition, s, pilot=pilot, budget=budget)
+                bundle = await run_one(population, condition, w, n_agents=agents, pilot=pilot, budget=budget)
                 counts[await post_bundle(client, bundle)] += 1
-            except Exception as e:  # a failed run is logged and skipped
+            except Exception as e:  # a failed world is logged and skipped
                 counts["failed"] += 1
                 with failures.open("a", encoding="utf-8") as f:
-                    f.write(json.dumps({"model": model, "scenario": scenario, "condition": condition, "seed": s,
+                    f.write(json.dumps({"population": population, "condition": condition, "world_seed": w,
                                         "error": f"{type(e).__name__}: {e}"[:500], "at": time.time()}) + "\n")
             done = sum(counts.values())
             if done % 10 == 0 or done == len(specs):
@@ -126,13 +125,3 @@ async def _batch(specs: list[tuple[str, str, str, int]], pilot: bool, budget: Bu
         await asyncio.gather(*(one(client, spec) for spec in specs))
     typer.echo(f"finished: {counts}")
     return counts["skipped"]
-
-
-@app.command("analyze")
-def analyze(out: Path = RESULTS_DIR / "results.md") -> None:
-    """Read every run from the API and write results/results.md (study models from ASL_STUDY_MODELS)."""
-    models = [m for m in os.environ.get("ASL_STUDY_MODELS", ",".join(STUDY_MODELS)).split(",") if m]
-    report = build_report(fetch_runs(), models)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(report, encoding="utf-8")
-    typer.echo(f"wrote {out}")

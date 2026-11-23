@@ -7,21 +7,22 @@ from typing import Literal
 
 from pydantic import BaseModel, ValidationError, field_validator
 
-Verb = Literal["WAIT", "SAY", "CALL", "SET_PRIORITY"]
 
+class Pick(BaseModel):
+    ticket: str
+    priority: Literal["HIGH", "LOW"]
 
-class AgentAction(BaseModel):
-    """What the focal agent's LLM call must return. Word limits are in the prompt, not enforced here."""
-
-    action: Verb
-    priority: Literal["HIGH", "LOW"] | None = None
-    text: str | None = None
-    thought: str = ""
-
-    @field_validator("priority", mode="before")
+    @field_validator("ticket", "priority", mode="before")
     @classmethod
-    def _upper(cls, v):
+    def _clean(cls, v):
         return v.strip().upper() if isinstance(v, str) else v
+
+
+class AgentPicks(BaseModel):
+    """What an agent's LLM call must return: its picks and a private thought. Counts are checked in `semantic_error`."""
+
+    picks: list[Pick]
+    thought: str = ""
 
 
 class Persona(BaseModel):
@@ -33,10 +34,10 @@ class Persona(BaseModel):
     bio: str
 
 
-def extract_action(text: str) -> AgentAction | None:
-    """Try raw_decode at every '{' and return the LAST candidate that validates as an AgentAction."""
+def extract_picks(text: str) -> AgentPicks | None:
+    """Try raw_decode at every '{' and return the LAST candidate that validates as AgentPicks."""
     decoder = json.JSONDecoder()
-    found: AgentAction | None = None
+    found: AgentPicks | None = None
     for i, ch in enumerate(text):
         if ch != "{":
             continue
@@ -47,7 +48,7 @@ def extract_action(text: str) -> AgentAction | None:
         if not isinstance(obj, dict):
             continue
         try:
-            found = AgentAction.model_validate(obj)
+            found = AgentPicks.model_validate(obj)
         except ValidationError:
             continue
     return found

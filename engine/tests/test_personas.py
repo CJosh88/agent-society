@@ -2,7 +2,7 @@ import json
 from collections import Counter
 
 from asl_engine.config import PERSONAS_PATH
-from asl_engine.personas import TRAITS, load_personas, make_personas, pick_cast
+from asl_engine.personas import TRAITS, make_personas
 
 
 def test_thirty_balanced_personas():
@@ -15,15 +15,5 @@ def test_thirty_balanced_personas():
 
 
 def test_the_committed_file_is_exactly_make_personas_42():
-    """personas.json is frozen by the prereg-v2 tag; regenerate it only on purpose."""
+    """personas.json is frozen by the prereg-c1 tag; regenerate it only on purpose."""
     assert json.loads(PERSONAS_PATH.read_text(encoding="utf-8")) == make_personas(42)
-
-
-def test_cast_is_a_pure_function_of_the_seed():
-    ps = load_personas()
-    a, b = pick_cast(7, ps), pick_cast(7, ps)
-    assert a == b
-    chosen = [a["focal"].persona_id] + [p.persona_id for p in a["scripted"].values()]
-    assert len(set(chosen)) == 5
-    assert pick_cast(8, ps) != a
-    assert sorted(a["alarm_order"]) == list(range(6))

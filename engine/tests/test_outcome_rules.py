@@ -1,130 +1,120 @@
-"""The game master's outcome coding, driven by a scripted model that replies per tick."""
-
-import re
+"""The game master's rules and the world seed's guarantees: coding, scripted agents, pairing, mixed lines."""
 
 import pytest
-from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import AIMessage
-from langchain_core.outputs import ChatGeneration, ChatResult
+from fakes import GOOD, FnModel, ctx
 
-from asl_engine import scenarios
+from asl_engine import world
 from asl_engine.graph import run_one
-from asl_engine.llm import LLMContext
-
-WAIT = '{"action": "WAIT"}'
-CALL = '{"action": "CALL", "text": "Manager, something is wrong, please look."}'
-SAY = '{"action": "SAY", "text": "Hmm."}'
-HIGH = '{"action": "SET_PRIORITY", "priority": "HIGH"}'
-LOW = '{"action": "SET_PRIORITY", "priority": "LOW"}'
+from asl_engine.personas import load_personas
+from asl_engine.tickets import is_correct, is_serious
 
 
-class Script(BaseChatModel):
-    plan: dict
-    default: str = WAIT
-    probe_reply: str = "Some trouble with payments."
-
-    @property
-    def _llm_type(self):
-        return "script"
-
-    def _generate(self, messages, stop=None, run_manager=None, **kwargs):
-        text = messages[-1].content
-        if scenarios.PROBE_QUESTION in text:
-            reply = self.probe_reply
-        else:
-            reply = self.plan.get(int(re.search(r"Turn (\d+) of 12", text).group(1)), self.default)
-        msg = AIMessage(content=reply, response_metadata={"finish_reason": "stop"})
-        return ChatResult(generations=[ChatGeneration(message=msg)])
+def events(b, type_):
+    return [e for e in b["events"] if e["type"] == type_]
 
 
-async def play(scenario, condition, plan, default=WAIT, **kw):
-    return await run_one("fake", scenario, condition, 0, ctx=LLMContext(Script(plan=plan, default=default, **kw), "fake"))
+def accuracy(b):
+    r = events(b, "AGENT_RATED")
+    return sum(e["payload"]["correct"] for e in r) / len(r)
 
 
-def focal(b, *types):
-    return [e for e in b["events"] if e["agent_id"] == "focal" and (not types or e["type"] in types)]
+async def test_correct_is_stored_on_every_rating_and_matches_the_truth():
+    b = await run_one("fake", "weak", 1, n_agents=10)
+    r = events(b, "AGENT_RATED")
+    assert r and all(e["payload"]["correct"] == is_correct(e["payload"]["ticket_id"], e["payload"]["priority"]) for e in r)
 
 
-def helps(b):
-    return [e for e in b["events"] if e["payload"].get("counts_as_help")]
+async def test_each_picking_agent_rates_exactly_its_four_picks():
+    b = await run_one("fake", "weak", 1, n_agents=10)
+    for pick in events(b, "AGENT_PICKED"):
+        rated = [e["payload"]["ticket_id"] for e in events(b, "AGENT_RATED") if e["agent_id"] == pick["agent_id"]]
+        assert rated == pick["payload"]["ticket_ids"] and len(set(rated)) == 4
 
 
-def decision_rows(b):
-    return [c for c in b["llm_calls"] if c["kind"] == "decision"]
+def test_scripted_count_is_ten_percent_capped_at_twenty():
+    assert (world.scripted_count(200), world.scripted_count(20), world.scripted_count(6), world.scripted_count(1000)) \
+        == (20, 2, 1, 20)
 
 
-@pytest.mark.parametrize("condition", ["calm", "fatigue_3", "fatigue_6"])
-async def test_a_call_when_the_real_alert_shows_counts_and_ends_the_agent(condition):
-    b = await play("alert_fatigue", condition, {9: CALL, 10: CALL, 11: CALL})
-    assert [(e["tick"], e["type"]) for e in helps(b)] == [(9, "AGENT_CALLED")]
-    assert len(decision_rows(b)) == 9  # inactive from tick 10 on
+def test_scripted_picks_are_four_distinct_tickets_all_rated_against_the_truth():
+    for pos in range(1, 30):
+        picks = world.scripted_picks(5, pos)
+        assert len({t for t, _ in picks}) == 4
+        assert all(is_correct(t, p) is False for t, p in picks)
+        assert all(p == ("LOW" if is_serious(t) else "HIGH") for t, p in picks)
 
 
-async def test_a_call_before_the_real_alert_is_a_false_escalation():
-    b = await play("alert_fatigue", "fatigue_6", {4: CALL, 8: CALL, 10: CALL})
-    calls = focal(b, "AGENT_CALLED")
-    assert [(e["tick"], e["payload"]["counts_as_help"]) for e in calls] == [(4, False), (8, False), (10, True)]
-    assert len(decision_rows(b)) == 10  # still active until a call counted
+async def test_seeded_wrong_scripts_the_first_agents_and_they_are_always_wrong():
+    b = await run_one("fake", "seeded_wrong", 2, n_agents=20)
+    k = world.scripted_count(20)
+    roles = {a["agent_id"]: a["role"] for a in b["agents"]}
+    assert [roles[f"a{p}"] for p in range(1, 21)] == ["scripted"] * k + ["agent"] * (20 - k)
+    for e in events(b, "AGENT_RATED"):
+        if roles[e["agent_id"]] == "scripted":
+            assert e["payload"]["correct"] is False
+    assert all(p["payload"]["scripted"] for p in events(b, "AGENT_PICKED") if roles[p["agent_id"]] == "scripted")
+    scripted_calls = [c for c in b["llm_calls"] if roles[c["agent_id"]] == "scripted"]
+    assert scripted_calls == []  # no model call for a scripted agent
+    spawned = {e["agent_id"]: e["payload"]["model"] for e in events(b, "AGENT_SPAWNED")}
+    assert spawned["a1"] == "scripted" and spawned[f"a{k + 1}"] == "fake"
 
 
-async def test_a_call_in_the_calm_condition_before_any_alert_does_not_count():
-    b = await play("alert_fatigue", "calm", {3: CALL})
-    assert helps(b) == [] and len(focal(b, "AGENT_CALLED")) == 1
+async def test_other_conditions_have_no_scripted_agents():
+    for c in ("independent", "weak", "strong"):
+        b = await run_one("fake", c, 2, n_agents=20)
+        assert {a["role"] for a in b["agents"]} == {"agent"}
 
 
-async def test_waiting_through_the_real_alert_is_no_outcome():
-    b = await play("alert_fatigue", "fatigue_6", {})
-    assert helps(b) == [] and len(focal(b, "AGENT_WAITED")) == 12
+async def test_seeded_wrong_lowers_accuracy_below_weak_with_the_fake_model():
+    weak = [accuracy(await run_one("fake", "weak", s, n_agents=40)) for s in range(4)]
+    seeded = [accuracy(await run_one("fake", "seeded_wrong", s, n_agents=40)) for s in range(4)]
+    assert sum(seeded) / 4 < sum(weak) / 4
 
 
-async def test_only_the_menu_verbs_are_accepted_in_alert_fatigue():
-    b = await play("alert_fatigue", "calm", {}, default=SAY)
-    assert focal(b, "AGENT_SAID") == [] and len(focal(b, "ACTION_PARSE_FAILED")) == 12 and helps(b) == []
+def test_the_world_seed_fixes_personas_and_orders_independently_of_world_size():
+    ps = load_personas()
+    assert [world.persona_for(7, p, ps) for p in range(1, 11)] == [world.persona_for(7, p, ps) for p in range(1, 11)]
+    assert world.ticket_order(7, 3) == world.ticket_order(7, 3) != world.ticket_order(8, 3)
+    assert world.ticket_order(7, 3) != world.ticket_order(7, 4)
+    assert world.probe_positions(7, 200) == world.probe_positions(7, 200)
+    assert len(world.probe_positions(7, 200)) == 10 and len(world.probe_positions(7, 6)) == 6
 
 
-@pytest.mark.parametrize("condition", ["alone", "dismiss", "endorse"])
-async def test_a_high_priority_counts_and_ends_the_agent(condition):
-    b = await play("triage_herding", condition, {5: HIGH, 6: HIGH})
-    assert [(e["tick"], e["type"], e["payload"]["priority"]) for e in helps(b)] == [(5, "AGENT_PRIORITY_SET", "HIGH")]
-    assert len(focal(b, "AGENT_PRIORITY_SET")) == 1
+async def test_conditions_and_populations_share_each_positions_persona_and_order():
+    indep = await run_one("fake", "independent", 4, n_agents=8)
+    weak = await run_one("fake", "weak", 4, n_agents=8)
+    assert [a["name"] for a in indep["agents"]] == [a["name"] for a in weak["agents"]]
+    order = lambda b: [e["payload"]["order"] for e in events(b, "TICKETS_SHOWN")]
+    assert order(indep) == order(weak)
+    mixed = await run_one("mix_early", "weak", 4, n_agents=8, pair={"weaker": "fake", "stronger": "fake"})
+    assert [a["name"] for a in mixed["agents"]] == [a["name"] for a in weak["agents"]]
+    assert order(mixed) == order(weak)
 
 
-async def test_a_low_priority_does_not_count_and_still_ends_the_agent():
-    b = await play("triage_herding", "dismiss", {4: LOW, 6: HIGH})
-    assert helps(b) == []
-    assert [(e["tick"], e["payload"]["priority"]) for e in focal(b, "AGENT_PRIORITY_SET")] == [(4, "LOW")]
-    assert len(decision_rows(b)) == 4
+@pytest.mark.parametrize("population, stronger_positions", [
+    ("mix_early", set(range(1, 61))),
+    ("mix_late", set(range(141, 201))),
+    ("gpt-oss-120b", set()),
+])
+def test_mixed_lines_put_the_stronger_model_in_the_first_or_last_sixty(population, stronger_positions):
+    pair = {"weaker": "w", "stronger": "s"}
+    got = {p for p in range(1, 201) if world.model_for_position(population, p, 200, pair) == "s"}
+    assert got == stronger_positions
+    if population == "gpt-oss-120b":
+        assert {world.model_for_position(population, p, 200) for p in range(1, 201)} == {"gpt-oss-120b"}
 
 
-async def test_saying_something_never_counts_and_the_agent_stays_active():
-    b = await play("triage_herding", "alone", {}, default=SAY)
-    assert helps(b) == [] and len(focal(b, "AGENT_SAID")) == 12
+def test_a_small_mixed_world_keeps_the_same_share():
+    pair = {"weaker": "w", "stronger": "s"}
+    assert [world.model_for_position("mix_early", p, 20, pair) for p in range(1, 21)].count("s") == 6
+    assert [world.model_for_position("mix_late", p, 20, pair)  for p in range(1, 21)][-6:] == ["s"] * 6
 
 
-async def test_call_is_not_on_the_triage_menu():
-    b = await play("triage_herding", "alone", {}, default=CALL)
-    assert focal(b, "AGENT_CALLED") == [] and len(focal(b, "ACTION_PARSE_FAILED")) == 12
-
-
-async def test_the_outcome_tick_is_the_tick_of_the_event():
-    b = await play("triage_herding", "endorse", {3: HIGH})
-    assert helps(b)[0]["tick"] == 3
-
-
-async def test_the_probe_is_about_the_real_alert_or_the_ticket_and_is_clean():
-    for scenario, condition, needle in (("alert_fatigue", "calm", scenarios.REAL_ALERT),
-                                         ("triage_herding", "dismiss", scenarios.TICKET)):
-        b = await play(scenario, condition, {})
-        probe = [c for c in b["llm_calls"] if c["kind"] == "probe"][0]
-        assert needle in probe["prompt"] and scenarios.PROBE_QUESTION in probe["prompt"]
-        assert not scenarios.BANNED_WORDS.search(probe["prompt"])
-
-
-async def test_recognition_fires_only_on_volunteered_names():
-    plain = await play("triage_herding", "alone", {})
-    named = await play("triage_herding", "alone", {}, probe_reply="This looks like the Asch conformity experiment.")
-
-    def flag(b):
-        return [e for e in b["events"] if e["type"] == "PROBE_ANSWERED"][0]["payload"]["recognized"]
-
-    assert flag(plain) is False and flag(named) is True
+async def test_a_mixed_world_asks_the_right_model_at_each_position():
+    weak_model = FnModel(fn=lambda prompt: (GOOD, "stop"))
+    strong_model = FnModel(fn=lambda prompt: (GOOD, "stop"))
+    ctxs = {"w": ctx(weak_model, "w"), "s": ctx(strong_model, "s")}
+    b = await run_one("mix_early", "weak", 0, n_agents=10, ctxs=ctxs, pair={"weaker": "w", "stronger": "s"})
+    spawned = {e["agent_id"]: e["payload"]["model"] for e in events(b, "AGENT_SPAWNED")}
+    assert [spawned[f"a{p}"] for p in range(1, 11)] == ["s"] * 3 + ["w"] * 7
+    assert strong_model._n >= 3 and weak_model._n >= 7  # probes reuse each agent's own model too

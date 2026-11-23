@@ -1,4 +1,4 @@
-"""The focal agent's turn as a compiled LangGraph subgraph: perceive -> decide -> validate, one retry."""
+"""One agent's turn as a compiled LangGraph subgraph: perceive -> decide -> validate, one retry."""
 
 from __future__ import annotations
 
@@ -8,12 +8,14 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.graph import END, START, StateGraph
 
 from . import scenarios
+from .config import PICKS
 from .llm import LLMContext, render_prompt
-from .models import Persona, extract_action
+from .models import AgentPicks, Persona, extract_picks
+from .tickets import ticket_ids
 
 
 class TurnState(TypedDict, total=False):
-    view: dict  # everything the agent perceives this tick (built by the outer graph)
+    view: dict  # everything this agent perceives (built by the outer graph)
     system: str
     user: str
     attempt: int
@@ -21,7 +23,7 @@ class TurnState(TypedDict, total=False):
     pending: dict | None  # the llm_calls row from `decide`, finished by `validate`
     raw: str
     finish: str | None
-    action: dict | None
+    action: dict | None  # the validated AgentPicks as a dict
     failed: bool
     truncated: bool
     turn_calls: list  # plain list, not a reducer: a subgraph that shares a reduced key would re-add its history
@@ -29,11 +31,8 @@ class TurnState(TypedDict, total=False):
 
 def perceive(state: TurnState) -> dict[str, Any]:
     v = state["view"]
-    system = scenarios.system_prompt(
-        v["scenario"], v["condition"], Persona.model_validate(v["persona"]), v["others"]
-    )
     return {
-        "system": system,
+        "system": scenarios.system_prompt(Persona.model_validate(v["persona"])),
         "user": scenarios.user_prompt(v),
         "attempt": 1,
         "error": None,
@@ -44,27 +43,32 @@ def perceive(state: TurnState) -> dict[str, Any]:
     }
 
 
-def semantic_error(action, view: dict) -> str | None:
-    """None if the action is usable in this scenario, otherwise the message shown to the model."""
-    if action.action not in view["valid_actions"]:
-        return f"action {action.action!r} is not one of: {', '.join(view['valid_actions'])}"
-    if action.action in ("SAY", "CALL") and not (action.text or "").strip():
-        return f"{action.action} needs non-empty text"
-    if action.action == "SET_PRIORITY" and action.priority is None:
-        return "SET_PRIORITY needs priority set to HIGH or LOW"
+def semantic_error(picks: AgentPicks) -> str | None:
+    """None if the picks are usable, otherwise the message shown to the model on the retry."""
+    if len(picks.picks) != PICKS:
+        return f"you must pick exactly {PICKS} tickets, but {len(picks.picks)} were given"
+    tickets = [p.ticket for p in picks.picks]
+    if len(set(tickets)) != PICKS:
+        return "the four tickets must be different"
+    unknown = [t for t in tickets if t not in ticket_ids()]
+    if unknown:
+        return f"{', '.join(unknown)} is not a ticket on the list"
     return None
 
 
-def build_agent_graph(ctx: LLMContext):
+def build_agent_graph(ctxs: dict[str, LLMContext]):
+    """`ctxs` maps a model key to its context; the turn uses the one named in its view."""
+
     async def decide(state: TurnState) -> dict[str, Any]:
+        view = state["view"]
         user = state["user"]
         if state.get("error"):
             user = f"{user}\n\n{scenarios.retry_line(state['error'])}"
         messages = [SystemMessage(state["system"]), HumanMessage(user)]
-        res = await ctx.call(messages)
+        res = await ctxs[view["model_key"]].call(messages)
         pending = {
-            "agent_id": "focal",
-            "tick": state["view"]["tick"],
+            "agent_id": view["agent_id"],
+            "tick": view["position"],
             "kind": "decision",
             "attempt": state["attempt"],
             "prompt": render_prompt(messages),
@@ -79,11 +83,11 @@ def build_agent_graph(ctx: LLMContext):
         return {"pending": pending, "raw": res.text, "finish": res.finish_reason}
 
     def validate(state: TurnState) -> dict[str, Any]:
-        action = extract_action(state["raw"])
-        error = "no valid JSON action found" if action is None else semantic_error(action, state["view"])
+        picks = extract_picks(state["raw"])
+        error = "no valid JSON object with four picks found" if picks is None else semantic_error(picks)
         calls = state["turn_calls"] + [{**state["pending"], "parsed_ok": error is None}]
         if error is None:
-            return {"turn_calls": calls, "action": action.model_dump(), "error": None}
+            return {"turn_calls": calls, "action": picks.model_dump(), "error": None}
         if state["attempt"] == 1:
             return {"turn_calls": calls, "error": error, "attempt": 2}
         return {"turn_calls": calls, "failed": True, "error": error, "truncated": state["finish"] == "length"}

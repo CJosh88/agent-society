@@ -8,24 +8,30 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-ENGINE_VERSION = "0.2.0"
-EXPERIMENT = "agent_society_v2"
+ENGINE_VERSION = "0.4.0"
+EXPERIMENT = "cascade_v1"
+SCENARIO = "triage_cascade"
 
-STUDY_MODELS = ("llama-3.1-8b", "gpt-oss-120b", "claude-haiku-5-5")
-SCENARIOS = ("alert_fatigue", "triage_herding")
-# The first condition of each scenario is its baseline: the one every other condition is compared with.
-SCENARIO_CONDITIONS = {
-    "alert_fatigue": ("calm", "fatigue_3", "fatigue_6"),
-    "triage_herding": ("alone", "dismiss", "endorse"),
-}
-ONSET_TICK = {"alert_fatigue": 9, "triage_herding": 3}  # when the real alert or the ticket arrives
+STUDY_POPULATIONS = ("llama-3.1-8b", "gpt-oss-120b", "claude-haiku-5-5", "mix_early", "mix_late")
+SINGLE_POPULATIONS = ("llama-3.1-8b", "gpt-oss-120b", "claude-haiku-5-5")
+MIXED_POPULATIONS = ("mix_early", "mix_late")
+# The first condition is the baseline: the one every other condition is compared with.
+CONDITIONS = ("independent", "weak", "strong", "seeded_wrong")
 
-MAX_TICKS = 12
+# The mixed populations: which model is the weaker and which the stronger (confirmed in the C4 pilots).
+MIX_PAIR = {"weaker": "llama-3.1-8b", "stronger": "gpt-oss-120b"}
+MIX_BLOCK_SHARE = 0.3  # the stronger model's block: 60 of 200 positions
+SCRIPTED_SHARE = 0.1  # seeded_wrong scripts the first 20 of 200 positions
+MAX_SCRIPTED = 20
+PROBE_SAMPLE = 10
+N_AGENTS = 200
+PICKS = 4
 
 # Repo layout: <root>/engine/src/asl_engine/config.py
 ENGINE_DIR = Path(__file__).resolve().parents[2]
 ROOT_DIR = ENGINE_DIR.parent
 PERSONAS_PATH = ENGINE_DIR / "data" / "personas.json"
+TICKETS_PATH = ENGINE_DIR / "data" / "tickets.json"
 RESULTS_DIR = ROOT_DIR / "results"
 GRAPH_PATH = ROOT_DIR / "docs" / "graph.mmd"
 SCHEMA_PATH = ROOT_DIR / "contracts" / "run-bundle.schema.json"
@@ -106,3 +112,11 @@ def concurrency() -> int:
 
 def max_usd() -> float:
     return float(os.environ.get("ASL_MAX_USD", "8"))
+
+
+POPULATIONS = STUDY_POPULATIONS + ("fake",)
+
+
+def conditions_for(population: str) -> tuple[str, ...]:
+    """seeded_wrong is defined for single-model populations only (the fake model counts as single)."""
+    return tuple(c for c in CONDITIONS if not (c == "seeded_wrong" and population in MIXED_POPULATIONS))

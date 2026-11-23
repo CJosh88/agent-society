@@ -1,4 +1,4 @@
-"""30 personas built without an LLM. Frozen by the prereg-v1 tag."""
+"""30 personas built without an LLM. Frozen by the prereg-c1 tag."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ NAMES = [
     "Amara Diallo", "Liam O'Connor", "Noor Hassan", "Diego Torres", "Sana Malik",
 ]
 
-# Roles that make sense both in a town square and at a small online shop. Each is used twice.
+# Roles that make sense at a small online shop. Each is used twice.
 OCCUPATIONS = [
     "customer support agent", "warehouse coordinator", "marketing assistant", "accountant", "web developer",
     "graphic designer", "bookkeeper", "operations assistant", "sales associate", "copywriter",
@@ -77,18 +77,3 @@ def write_personas(path: Path = PERSONAS_PATH, seed: int = 42) -> list[dict]:
 
 def load_personas(path: Path = PERSONAS_PATH) -> list[Persona]:
     return [Persona.model_validate(p) for p in json.loads(path.read_text(encoding="utf-8"))]
-
-
-def pick_cast(seed: int, personas: list[Persona]) -> dict:
-    """Seed -> the focal persona, 4 distinct scripted personas and an order for the six false alarms.
-
-    The draw order never depends on scenario or condition, so seed s gives the same people in every cell.
-    """
-    rng = random.Random(seed)
-    idx = rng.sample(range(len(personas)), 5)
-    alarm_order = rng.sample(range(6), 6)  # which false alarm comes first, second, ...
-    return {
-        "focal": personas[idx[0]],
-        "scripted": {f"s{i}": personas[idx[i]] for i in range(1, 5)},
-        "alarm_order": alarm_order,
-    }

@@ -18,3 +18,12 @@ jobs:
         working-directory: api
         run: ./mvnw -B verify
 
+
+  engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Test (no network, no keys)
+        working-directory: engine
+        run: uv run pytest
