@@ -4,7 +4,7 @@ Can a line of LLM agents triaging support tickets talk itself into mistakes, and
 
 Design: [docs/designs/design.md](docs/designs/design.md) (v0.4, draft, not yet built).
 
-## Statuss
+## Status
 
 `main` holds the v0.4 design and nothing else. The earlier study (alert fatigue and herding in triage, v0.3) is preserved with its code, replay viewer and API on the branch `v0.3-alert-fatigue-herding`. Milestones C0–C6 in the design doc rebuild the engine and API from that branch.
 
