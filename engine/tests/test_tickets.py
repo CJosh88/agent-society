@@ -32,3 +32,12 @@ def test_ticket_ids_is_a_fresh_list_each_time():
     ids = ticket_ids()
     ids.reverse()
     assert ticket_ids()[0] == "T01"
+
+
+def test_the_replay_pages_ticket_text_matches_the_catalogue_and_carries_no_truth():
+    """api/.../static/tickets.json is a text-only copy for the replay; the truth must never be served."""
+    from asl_engine.config import ROOT_DIR
+
+    path = ROOT_DIR / "api" / "src" / "main" / "resources" / "static" / "tickets.json"
+    served = json.loads(path.read_text(encoding="utf-8"))
+    assert served == [{"id": t.id, "text": t.text} for t in load_tickets()]

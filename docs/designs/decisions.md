@@ -52,3 +52,11 @@ Choices the design doc leaves open, and changes made to the repo. One entry each
 - **Fixed run id.** `uuid5(population|scenario|condition|world_seed|prompt_version)` has no agent count, so a 20-agent smoke world and a full world of the same cell would collide; smoke worlds use `fake`.
 - **Left-over spend.** `results/spend.json` still holds the $0.14 spent in the v0.3 pilots and counts toward `ASL_MAX_USD`.
 - **CI.** The `engine` job is added to `.github/workflows/ci.yml`.
+
+## C3 frontend choices (2026-11-23)
+
+- **Replay.** Phaser 3.90.0 (pinned CDN) draws a 6×4 board of ticket cards, each with its HIGH count and a share bar, and a strip with one disc per agent (coloured by model, scripted agents grey, filled once the agent has acted). The slider is the agent position 0–N. Every position is drawn from indexed events, so scrubbing is exact and nothing animates. A side panel shows the current agent, its persona, the list order it saw and its picks and thoughts; clicking a card shows the ticket text.
+- **Truth stays hidden by default.** "Reveal truth" colours cards (serious red, routine green), shows each rating's `correct` and the world accuracy. The truth is derived from the ratings (HIGH and correct, or LOW and wrong, means serious), so no truth file is served.
+- **New static file `api/src/main/resources/static/tickets.json`** (id and text only, no truth) so the replay can show ticket text, which bundles do not carry. `test_tickets.py` checks it equals the engine catalogue's text, and `StaticPagesIT` checks it has no `truth` field. Update it whenever the ticket text changes (C4).
+- **Results page.** Per population: a plain-SVG bar chart of mean world accuracy with 95% bootstrap whiskers, then a table and a differences row. Replay speeds are 1×, 4× and 16×.
+- **Checked by hand** in Chrome against fake worlds: replay at a mid position with truth revealed, the results chart and table, and no console errors on either page.
