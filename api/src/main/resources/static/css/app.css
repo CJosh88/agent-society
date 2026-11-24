@@ -96,3 +96,25 @@ aside h2 { margin-top: 18px; }
 .ticket-text { margin: 0; font-size: 0.92rem; }
 .probe ul { margin: 6px 0 0; padding-left: 18px; }
 td.wrap { white-space: normal; min-width: 280px; }
+
+/* experiment tabs */
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 18px; border-bottom: 1px solid var(--line); }
+.tabs button {
+  border: 1px solid var(--line); border-bottom: none; border-radius: 8px 8px 0 0; background: #f0eee8;
+  padding: 8px 14px; margin-bottom: -1px;
+}
+.tabs button[aria-selected="true"] { background: var(--bg); border-bottom: 1px solid var(--bg); font-weight: 600; }
+.badge {
+  display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 400;
+  border: 1px solid var(--line); color: var(--muted); background: var(--card);
+}
+.badge.live { color: var(--good); border-color: var(--good); }
+[role="tabpanel"][hidden] { display: none; }
+
+/* explainer and references */
+#explainer p, #explainer li, #references li, #about p { max-width: 75ch; }
+.defs { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; max-width: 75ch; margin: 0; }
+.defs dt { font-weight: 600; }
+.defs dd { margin: 0; }
+.refs li { margin-bottom: 10px; }
+@media (max-width: 600px) { .defs { grid-template-columns: 1fr; } .defs dd { margin-bottom: 6px; } }

@@ -11,6 +11,36 @@ const comparisonText = (c) => c.split('-').map((x) => label(CONDITION_LABELS, x)
 const replayLink = (id, text = 'Replay') => el('a', { href: `replay.html?run=${encodeURIComponent(id)}` }, text);
 const accuracyText = (a) => (a == null ? 'no ratings' : pct(a, 1));
 
+// ---- Experiment tabs --------------------------------------------------------------------------
+// One panel per experiment. The selected tab lives in the URL hash, so a link can point at a tab.
+
+const tabButtons = [...document.querySelectorAll('[role="tab"]')];
+
+function selectTab(name, focus = false) {
+  const active = tabButtons.find((b) => b.dataset.tab === name) ?? tabButtons[0];
+  for (const b of tabButtons) {
+    const on = b === active;
+    b.setAttribute('aria-selected', String(on));
+    b.tabIndex = on ? 0 : -1;
+    document.getElementById(b.getAttribute('aria-controls')).hidden = !on;
+  }
+  if (focus) active.focus();
+}
+
+for (const b of tabButtons) {
+  b.addEventListener('click', () => { location.hash = b.dataset.tab; });
+  b.addEventListener('keydown', (e) => {
+    const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const next = tabButtons[(tabButtons.indexOf(b) + step + tabButtons.length) % tabButtons.length];
+    location.hash = next.dataset.tab;
+    next.focus();
+  });
+}
+window.addEventListener('hashchange', () => selectTab(location.hash.slice(1)));
+selectTab(location.hash.slice(1));
+
 // ---- Featured worlds --------------------------------------------------------------------------
 
 async function loadFeatured() {

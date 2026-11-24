@@ -32,6 +32,22 @@ class StaticPagesIT {
 	}
 
 	@Test
+	void indexPageHasExperimentTabsAnExplainerAndTheReferencesBeforeTheResults() throws Exception {
+		String html = mvc.perform(get("/index.html")).andReturn().getResponse().getContentAsString();
+		for (String tab : new String[] { "triage-herding", "alert-fatigue", "rl-training" }) {
+			org.junit.jupiter.api.Assertions.assertTrue(html.contains("data-tab=\"" + tab + "\""), tab);
+			org.junit.jupiter.api.Assertions.assertTrue(html.contains("id=\"panel-" + tab + "\""), tab);
+		}
+		int explainer = html.indexOf("id=\"explainer\"");
+		int references = html.indexOf("id=\"references\"");
+		int results = html.indexOf("id=\"results\"");
+		org.junit.jupiter.api.Assertions.assertTrue(explainer > 0 && explainer < references && references < results);
+		for (String id : new String[] { "2610.30769", "2606.01637", "2508.18321", "2601.21742", "2601.05606", "2411.01271" }) {
+			org.junit.jupiter.api.Assertions.assertTrue(html.contains("https://arxiv.org/abs/" + id), id);
+		}
+	}
+
+	@Test
 	void replayPageIsServedWithPhaserPinnedExactly() throws Exception {
 		mvc.perform(get("/replay.html")).andExpect(status().isOk())
 				.andExpect(content().string(containsString("cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js")))
