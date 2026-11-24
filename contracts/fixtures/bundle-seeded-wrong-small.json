@@ -1,0 +1,1440 @@
+{
+  "run": {
+    "id": "727e1a12-3f57-5394-854b-c77bd7fd2957",
+    "experiment": "cascade_v1",
+    "scenario": "triage_cascade",
+    "condition": "seeded_wrong",
+    "population": "gpt-oss-120b",
+    "world_seed": 1,
+    "prompt_version": "c1",
+    "engine_version": "0.4.0",
+    "pilot": false,
+    "started_at": "2026-11-24T10:00:00Z",
+    "ended_at": "2026-11-24T10:00:30Z"
+  },
+  "agents": [
+    {
+      "agent_id": "a1",
+      "name": "Colleague 1",
+      "role": "scripted",
+      "persona": {}
+    },
+    {
+      "agent_id": "a2",
+      "name": "Colleague 2",
+      "role": "scripted",
+      "persona": {}
+    },
+    {
+      "agent_id": "a3",
+      "name": "Lena Vogel",
+      "role": "agent",
+      "persona": {
+        "persona_id": "p03",
+        "name": "Lena Vogel",
+        "age": 41,
+        "occupation": "accountant",
+        "big5": {
+          "O": "low",
+          "C": "high",
+          "E": "high",
+          "A": "high",
+          "N": "high"
+        },
+        "bio": "You are warm and a little anxious."
+      }
+    },
+    {
+      "agent_id": "a4",
+      "name": "Arjun Mehta",
+      "role": "agent",
+      "persona": {
+        "persona_id": "p04",
+        "name": "Arjun Mehta",
+        "age": 29,
+        "occupation": "support lead",
+        "big5": {
+          "O": "high",
+          "C": "low",
+          "E": "high",
+          "A": "low",
+          "N": "low"
+        },
+        "bio": "You are quick and direct."
+      }
+    },
+    {
+      "agent_id": "a5",
+      "name": "Noor Hassan",
+      "role": "agent",
+      "persona": {
+        "persona_id": "p05",
+        "name": "Noor Hassan",
+        "age": 38,
+        "occupation": "warehouse manager",
+        "big5": {
+          "O": "low",
+          "C": "low",
+          "E": "low",
+          "A": "high",
+          "N": "high"
+        },
+        "bio": "You follow routine."
+      }
+    },
+    {
+      "agent_id": "a6",
+      "name": "Jonas Becker",
+      "role": "agent",
+      "persona": {
+        "persona_id": "p06",
+        "name": "Jonas Becker",
+        "age": 52,
+        "occupation": "operations assistant",
+        "big5": {
+          "O": "high",
+          "C": "high",
+          "E": "high",
+          "A": "low",
+          "N": "low"
+        },
+        "bio": "You are organised."
+      }
+    }
+  ],
+  "events": [
+    {
+      "seq": 0,
+      "tick": 1,
+      "type": "AGENT_SPAWNED",
+      "agent_id": "a1",
+      "payload": {
+        "position": 1,
+        "model": "scripted"
+      }
+    },
+    {
+      "seq": 1,
+      "tick": 1,
+      "type": "TICKETS_SHOWN",
+      "agent_id": "a1",
+      "payload": {
+        "order": [
+          "T21",
+          "T12",
+          "T24",
+          "T18",
+          "T22",
+          "T14",
+          "T06",
+          "T11",
+          "T10",
+          "T07",
+          "T01",
+          "T08",
+          "T02",
+          "T20",
+          "T17",
+          "T13",
+          "T23",
+          "T15",
+          "T16",
+          "T04",
+          "T09",
+          "T03",
+          "T19",
+          "T05"
+        ],
+        "counts": {
+          "T01": {
+            "high": 0,
+            "total": 0
+          },
+          "T02": {
+            "high": 0,
+            "total": 0
+          },
+          "T03": {
+            "high": 0,
+            "total": 0
+          },
+          "T04": {
+            "high": 0,
+            "total": 0
+          },
+          "T05": {
+            "high": 0,
+            "total": 0
+          },
+          "T06": {
+            "high": 0,
+            "total": 0
+          },
+          "T07": {
+            "high": 0,
+            "total": 0
+          },
+          "T08": {
+            "high": 0,
+            "total": 0
+          },
+          "T09": {
+            "high": 0,
+            "total": 0
+          },
+          "T10": {
+            "high": 0,
+            "total": 0
+          },
+          "T11": {
+            "high": 0,
+            "total": 0
+          },
+          "T12": {
+            "high": 0,
+            "total": 0
+          },
+          "T13": {
+            "high": 0,
+            "total": 0
+          },
+          "T14": {
+            "high": 0,
+            "total": 0
+          },
+          "T15": {
+            "high": 0,
+            "total": 0
+          },
+          "T16": {
+            "high": 0,
+            "total": 0
+          },
+          "T17": {
+            "high": 0,
+            "total": 0
+          },
+          "T18": {
+            "high": 0,
+            "total": 0
+          },
+          "T19": {
+            "high": 0,
+            "total": 0
+          },
+          "T20": {
+            "high": 0,
+            "total": 0
+          },
+          "T21": {
+            "high": 0,
+            "total": 0
+          },
+          "T22": {
+            "high": 0,
+            "total": 0
+          },
+          "T23": {
+            "high": 0,
+            "total": 0
+          },
+          "T24": {
+            "high": 0,
+            "total": 0
+          }
+        }
+      }
+    },
+    {
+      "seq": 2,
+      "tick": 1,
+      "type": "AGENT_PICKED",
+      "agent_id": "a1",
+      "payload": {
+        "ticket_ids": [
+          "T12",
+          "T06",
+          "T21",
+          "T24"
+        ],
+        "thought": null,
+        "scripted": true
+      }
+    },
+    {
+      "seq": 3,
+      "tick": 1,
+      "type": "AGENT_RATED",
+      "agent_id": "a1",
+      "payload": {
+        "ticket_id": "T12",
+        "priority": "LOW",
+        "correct": false
+      }
+    },
+    {
+      "seq": 4,
+      "tick": 1,
+      "type": "AGENT_RATED",
+      "agent_id": "a1",
+      "payload": {
+        "ticket_id": "T06",
+        "priority": "LOW",
+        "correct": false
+      }
+    },
+    {
+      "seq": 5,
+      "tick": 1,
+      "type": "AGENT_RATED",
+      "agent_id": "a1",
+      "payload": {
+        "ticket_id": "T21",
+        "priority": "HIGH",
+        "correct": false
+      }
+    },
+    {
+      "seq": 6,
+      "tick": 1,
+      "type": "AGENT_RATED",
+      "agent_id": "a1",
+      "payload": {
+        "ticket_id": "T24",
+        "priority": "HIGH",
+        "correct": false
+      }
+    },
+    {
+      "seq": 7,
+      "tick": 2,
+      "type": "AGENT_SPAWNED",
+      "agent_id": "a2",
+      "payload": {
+        "position": 2,
+        "model": "scripted"
+      }
+    },
+    {
+      "seq": 8,
+      "tick": 2,
+      "type": "TICKETS_SHOWN",
+      "agent_id": "a2",
+      "payload": {
+        "order": [
+          "T17",
+          "T16",
+          "T05",
+          "T10",
+          "T06",
+          "T02",
+          "T03",
+          "T15",
+          "T20",
+          "T24",
+          "T08",
+          "T04",
+          "T09",
+          "T19",
+          "T12",
+          "T14",
+          "T07",
+          "T13",
+          "T21",
+          "T18",
+          "T22",
+          "T23",
+          "T01",
+          "T11"
+        ],
+        "counts": {
+          "T01": {
+            "high": 0,
+            "total": 0
+          },
+          "T02": {
+            "high": 0,
+            "total": 0
+          },
+          "T03": {
+            "high": 0,
+            "total": 0
+          },
+          "T04": {
+            "high": 0,
+            "total": 0
+          },
+          "T05": {
+            "high": 0,
+            "total": 0
+          },
+          "T06": {
+            "high": 0,
+            "total": 1
+          },
+          "T07": {
+            "high": 0,
+            "total": 0
+          },
+          "T08": {
+            "high": 0,
+            "total": 0
+          },
+          "T09": {
+            "high": 0,
+            "total": 0
+          },
+          "T10": {
+            "high": 0,
+            "total": 0
+          },
+          "T11": {
+            "high": 0,
+            "total": 0
+          },
+          "T12": {
+            "high": 0,
+            "total": 1
+          },
+          "T13": {
+            "high": 0,
+            "total": 0
+          },
+          "T14": {
+            "high": 0,
+            "total": 0
+          },
+          "T15": {
+            "high": 0,
+            "total": 0
+          },
+          "T16": {
+            "high": 0,
+            "total": 0
+          },
+          "T17": {
+            "high": 0,
+            "total": 0
+          },
+          "T18": {
+            "high": 0,
+            "total": 0
+          },
+          "T19": {
+            "high": 0,
+            "total": 0
+          },
+          "T20": {
+            "high": 0,
+            "total": 0
+          },
+          "T21": {
+            "high": 1,
+            "total": 1
+          },
+          "T22": {
+            "high": 0,
+            "total": 0
+          },
+          "T23": {
+            "high": 0,
+            "total": 0
+          },
+          "T24": {
+            "high": 1,
+            "total": 1
+          }
+        }
+      }
+    },
+    {
+      "seq": 9,
+      "tick": 2,
+      "type": "AGENT_PICKED",
+      "agent_id": "a2",
+      "payload": {
+        "ticket_ids": [
+          "T05",
+          "T10",
+          "T17",
+          "T16"
+        ],
+        "thought": null,
+        "scripted": true
+      }
+    },
+    {
+      "seq": 10,
+      "tick": 2,
+      "type": "AGENT_RATED",
+      "agent_id": "a2",
+      "payload": {
+        "ticket_id": "T05",
+        "priority": "LOW",
+        "correct": false
+      }
+    },
+    {
+      "seq": 11,
+      "tick": 2,
+      "type": "AGENT_RATED",
+      "agent_id": "a2",
+      "payload": {
+        "ticket_id": "T10",
+        "priority": "LOW",
+        "correct": false
+      }
+    },
+    {
+      "seq": 12,
+      "tick": 2,
+      "type": "AGENT_RATED",
+      "agent_id": "a2",
+      "payload": {
+        "ticket_id": "T17",
+        "priority": "HIGH",
+        "correct": false
+      }
+    },
+    {
+      "seq": 13,
+      "tick": 2,
+      "type": "AGENT_RATED",
+      "agent_id": "a2",
+      "payload": {
+        "ticket_id": "T16",
+        "priority": "HIGH",
+        "correct": false
+      }
+    },
+    {
+      "seq": 14,
+      "tick": 3,
+      "type": "AGENT_SPAWNED",
+      "agent_id": "a3",
+      "payload": {
+        "position": 3,
+        "model": "gpt-oss-120b"
+      }
+    },
+    {
+      "seq": 15,
+      "tick": 3,
+      "type": "TICKETS_SHOWN",
+      "agent_id": "a3",
+      "payload": {
+        "order": [
+          "T20",
+          "T15",
+          "T03",
+          "T02",
+          "T12",
+          "T01",
+          "T19",
+          "T07",
+          "T08",
+          "T13",
+          "T05",
+          "T23",
+          "T17",
+          "T16",
+          "T09",
+          "T24",
+          "T11",
+          "T22",
+          "T10",
+          "T06",
+          "T04",
+          "T21",
+          "T18",
+          "T14"
+        ],
+        "counts": {
+          "T01": {
+            "high": 0,
+            "total": 0
+          },
+          "T02": {
+            "high": 0,
+            "total": 0
+          },
+          "T03": {
+            "high": 0,
+            "total": 0
+          },
+          "T04": {
+            "high": 0,
+            "total": 0
+          },
+          "T05": {
+            "high": 0,
+            "total": 1
+          },
+          "T06": {
+            "high": 0,
+            "total": 1
+          },
+          "T07": {
+            "high": 0,
+            "total": 0
+          },
+          "T08": {
+            "high": 0,
+            "total": 0
+          },
+          "T09": {
+            "high": 0,
+            "total": 0
+          },
+          "T10": {
+            "high": 0,
+            "total": 1
+          },
+          "T11": {
+            "high": 0,
+            "total": 0
+          },
+          "T12": {
+            "high": 0,
+            "total": 1
+          },
+          "T13": {
+            "high": 0,
+            "total": 0
+          },
+          "T14": {
+            "high": 0,
+            "total": 0
+          },
+          "T15": {
+            "high": 0,
+            "total": 0
+          },
+          "T16": {
+            "high": 1,
+            "total": 1
+          },
+          "T17": {
+            "high": 1,
+            "total": 1
+          },
+          "T18": {
+            "high": 0,
+            "total": 0
+          },
+          "T19": {
+            "high": 0,
+            "total": 0
+          },
+          "T20": {
+            "high": 0,
+            "total": 0
+          },
+          "T21": {
+            "high": 1,
+            "total": 1
+          },
+          "T22": {
+            "high": 0,
+            "total": 0
+          },
+          "T23": {
+            "high": 0,
+            "total": 0
+          },
+          "T24": {
+            "high": 1,
+            "total": 1
+          }
+        }
+      }
+    },
+    {
+      "seq": 16,
+      "tick": 3,
+      "type": "AGENT_PICKED",
+      "agent_id": "a3",
+      "payload": {
+        "ticket_ids": [
+          "T20",
+          "T15",
+          "T03",
+          "T02"
+        ],
+        "thought": "These look like the ones to settle first.",
+        "scripted": false
+      }
+    },
+    {
+      "seq": 17,
+      "tick": 3,
+      "type": "AGENT_RATED",
+      "agent_id": "a3",
+      "payload": {
+        "ticket_id": "T20",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 18,
+      "tick": 3,
+      "type": "AGENT_RATED",
+      "agent_id": "a3",
+      "payload": {
+        "ticket_id": "T15",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 19,
+      "tick": 3,
+      "type": "AGENT_RATED",
+      "agent_id": "a3",
+      "payload": {
+        "ticket_id": "T03",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 20,
+      "tick": 3,
+      "type": "AGENT_RATED",
+      "agent_id": "a3",
+      "payload": {
+        "ticket_id": "T02",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 21,
+      "tick": 4,
+      "type": "AGENT_SPAWNED",
+      "agent_id": "a4",
+      "payload": {
+        "position": 4,
+        "model": "gpt-oss-120b"
+      }
+    },
+    {
+      "seq": 22,
+      "tick": 4,
+      "type": "TICKETS_SHOWN",
+      "agent_id": "a4",
+      "payload": {
+        "order": [
+          "T02",
+          "T19",
+          "T11",
+          "T16",
+          "T05",
+          "T24",
+          "T17",
+          "T10",
+          "T01",
+          "T08",
+          "T23",
+          "T07",
+          "T09",
+          "T20",
+          "T13",
+          "T04",
+          "T15",
+          "T03",
+          "T21",
+          "T18",
+          "T12",
+          "T06",
+          "T22",
+          "T14"
+        ],
+        "counts": {
+          "T01": {
+            "high": 0,
+            "total": 0
+          },
+          "T02": {
+            "high": 1,
+            "total": 1
+          },
+          "T03": {
+            "high": 1,
+            "total": 1
+          },
+          "T04": {
+            "high": 0,
+            "total": 0
+          },
+          "T05": {
+            "high": 0,
+            "total": 1
+          },
+          "T06": {
+            "high": 0,
+            "total": 1
+          },
+          "T07": {
+            "high": 0,
+            "total": 0
+          },
+          "T08": {
+            "high": 0,
+            "total": 0
+          },
+          "T09": {
+            "high": 0,
+            "total": 0
+          },
+          "T10": {
+            "high": 0,
+            "total": 1
+          },
+          "T11": {
+            "high": 0,
+            "total": 0
+          },
+          "T12": {
+            "high": 0,
+            "total": 1
+          },
+          "T13": {
+            "high": 0,
+            "total": 0
+          },
+          "T14": {
+            "high": 0,
+            "total": 0
+          },
+          "T15": {
+            "high": 0,
+            "total": 1
+          },
+          "T16": {
+            "high": 1,
+            "total": 1
+          },
+          "T17": {
+            "high": 1,
+            "total": 1
+          },
+          "T18": {
+            "high": 0,
+            "total": 0
+          },
+          "T19": {
+            "high": 0,
+            "total": 0
+          },
+          "T20": {
+            "high": 0,
+            "total": 1
+          },
+          "T21": {
+            "high": 1,
+            "total": 1
+          },
+          "T22": {
+            "high": 0,
+            "total": 0
+          },
+          "T23": {
+            "high": 0,
+            "total": 0
+          },
+          "T24": {
+            "high": 1,
+            "total": 1
+          }
+        }
+      }
+    },
+    {
+      "seq": 23,
+      "tick": 4,
+      "type": "AGENT_PICKED",
+      "agent_id": "a4",
+      "payload": {
+        "ticket_ids": [
+          "T02",
+          "T19",
+          "T11",
+          "T16"
+        ],
+        "thought": "These look like the ones to settle first.",
+        "scripted": false
+      }
+    },
+    {
+      "seq": 24,
+      "tick": 4,
+      "type": "AGENT_RATED",
+      "agent_id": "a4",
+      "payload": {
+        "ticket_id": "T02",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 25,
+      "tick": 4,
+      "type": "AGENT_RATED",
+      "agent_id": "a4",
+      "payload": {
+        "ticket_id": "T19",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 26,
+      "tick": 4,
+      "type": "AGENT_RATED",
+      "agent_id": "a4",
+      "payload": {
+        "ticket_id": "T11",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 27,
+      "tick": 4,
+      "type": "AGENT_RATED",
+      "agent_id": "a4",
+      "payload": {
+        "ticket_id": "T16",
+        "priority": "HIGH",
+        "correct": false
+      }
+    },
+    {
+      "seq": 28,
+      "tick": 4,
+      "type": "ACTION_PARSE_FAILED",
+      "agent_id": "a4",
+      "payload": {
+        "raw_excerpt": "I think T01 matters.",
+        "truncated": false
+      }
+    },
+    {
+      "seq": 29,
+      "tick": 5,
+      "type": "AGENT_SPAWNED",
+      "agent_id": "a5",
+      "payload": {
+        "position": 5,
+        "model": "gpt-oss-120b"
+      }
+    },
+    {
+      "seq": 30,
+      "tick": 5,
+      "type": "TICKETS_SHOWN",
+      "agent_id": "a5",
+      "payload": {
+        "order": [
+          "T20",
+          "T11",
+          "T03",
+          "T02",
+          "T16",
+          "T12",
+          "T04",
+          "T21",
+          "T15",
+          "T05",
+          "T23",
+          "T14",
+          "T10",
+          "T24",
+          "T09",
+          "T13",
+          "T22",
+          "T19",
+          "T18",
+          "T07",
+          "T01",
+          "T08",
+          "T17",
+          "T06"
+        ],
+        "counts": {
+          "T01": {
+            "high": 0,
+            "total": 0
+          },
+          "T02": {
+            "high": 2,
+            "total": 2
+          },
+          "T03": {
+            "high": 1,
+            "total": 1
+          },
+          "T04": {
+            "high": 0,
+            "total": 0
+          },
+          "T05": {
+            "high": 0,
+            "total": 1
+          },
+          "T06": {
+            "high": 0,
+            "total": 1
+          },
+          "T07": {
+            "high": 0,
+            "total": 0
+          },
+          "T08": {
+            "high": 0,
+            "total": 0
+          },
+          "T09": {
+            "high": 0,
+            "total": 0
+          },
+          "T10": {
+            "high": 0,
+            "total": 1
+          },
+          "T11": {
+            "high": 1,
+            "total": 1
+          },
+          "T12": {
+            "high": 0,
+            "total": 1
+          },
+          "T13": {
+            "high": 0,
+            "total": 0
+          },
+          "T14": {
+            "high": 0,
+            "total": 0
+          },
+          "T15": {
+            "high": 0,
+            "total": 1
+          },
+          "T16": {
+            "high": 2,
+            "total": 2
+          },
+          "T17": {
+            "high": 1,
+            "total": 1
+          },
+          "T18": {
+            "high": 0,
+            "total": 0
+          },
+          "T19": {
+            "high": 0,
+            "total": 1
+          },
+          "T20": {
+            "high": 0,
+            "total": 1
+          },
+          "T21": {
+            "high": 1,
+            "total": 1
+          },
+          "T22": {
+            "high": 0,
+            "total": 0
+          },
+          "T23": {
+            "high": 0,
+            "total": 0
+          },
+          "T24": {
+            "high": 1,
+            "total": 1
+          }
+        }
+      }
+    },
+    {
+      "seq": 31,
+      "tick": 5,
+      "type": "AGENT_PICKED",
+      "agent_id": "a5",
+      "payload": {
+        "ticket_ids": [
+          "T20",
+          "T11",
+          "T03",
+          "T02"
+        ],
+        "thought": "These look like the ones to settle first.",
+        "scripted": false
+      }
+    },
+    {
+      "seq": 32,
+      "tick": 5,
+      "type": "AGENT_RATED",
+      "agent_id": "a5",
+      "payload": {
+        "ticket_id": "T20",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 33,
+      "tick": 5,
+      "type": "AGENT_RATED",
+      "agent_id": "a5",
+      "payload": {
+        "ticket_id": "T11",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 34,
+      "tick": 5,
+      "type": "AGENT_RATED",
+      "agent_id": "a5",
+      "payload": {
+        "ticket_id": "T03",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 35,
+      "tick": 5,
+      "type": "AGENT_RATED",
+      "agent_id": "a5",
+      "payload": {
+        "ticket_id": "T02",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 36,
+      "tick": 6,
+      "type": "AGENT_SPAWNED",
+      "agent_id": "a6",
+      "payload": {
+        "position": 6,
+        "model": "gpt-oss-120b"
+      }
+    },
+    {
+      "seq": 37,
+      "tick": 6,
+      "type": "TICKETS_SHOWN",
+      "agent_id": "a6",
+      "payload": {
+        "order": [
+          "T21",
+          "T15",
+          "T03",
+          "T23",
+          "T10",
+          "T05",
+          "T04",
+          "T11",
+          "T09",
+          "T01",
+          "T13",
+          "T20",
+          "T06",
+          "T22",
+          "T08",
+          "T24",
+          "T17",
+          "T07",
+          "T18",
+          "T19",
+          "T12",
+          "T16",
+          "T02",
+          "T14"
+        ],
+        "counts": {
+          "T01": {
+            "high": 0,
+            "total": 0
+          },
+          "T02": {
+            "high": 3,
+            "total": 3
+          },
+          "T03": {
+            "high": 2,
+            "total": 2
+          },
+          "T04": {
+            "high": 0,
+            "total": 0
+          },
+          "T05": {
+            "high": 0,
+            "total": 1
+          },
+          "T06": {
+            "high": 0,
+            "total": 1
+          },
+          "T07": {
+            "high": 0,
+            "total": 0
+          },
+          "T08": {
+            "high": 0,
+            "total": 0
+          },
+          "T09": {
+            "high": 0,
+            "total": 0
+          },
+          "T10": {
+            "high": 0,
+            "total": 1
+          },
+          "T11": {
+            "high": 2,
+            "total": 2
+          },
+          "T12": {
+            "high": 0,
+            "total": 1
+          },
+          "T13": {
+            "high": 0,
+            "total": 0
+          },
+          "T14": {
+            "high": 0,
+            "total": 0
+          },
+          "T15": {
+            "high": 0,
+            "total": 1
+          },
+          "T16": {
+            "high": 2,
+            "total": 2
+          },
+          "T17": {
+            "high": 1,
+            "total": 1
+          },
+          "T18": {
+            "high": 0,
+            "total": 0
+          },
+          "T19": {
+            "high": 0,
+            "total": 1
+          },
+          "T20": {
+            "high": 0,
+            "total": 2
+          },
+          "T21": {
+            "high": 1,
+            "total": 1
+          },
+          "T22": {
+            "high": 0,
+            "total": 0
+          },
+          "T23": {
+            "high": 0,
+            "total": 0
+          },
+          "T24": {
+            "high": 1,
+            "total": 1
+          }
+        }
+      }
+    },
+    {
+      "seq": 38,
+      "tick": 6,
+      "type": "AGENT_PICKED",
+      "agent_id": "a6",
+      "payload": {
+        "ticket_ids": [
+          "T21",
+          "T15",
+          "T03",
+          "T23"
+        ],
+        "thought": "These look like the ones to settle first.",
+        "scripted": false
+      }
+    },
+    {
+      "seq": 39,
+      "tick": 6,
+      "type": "AGENT_RATED",
+      "agent_id": "a6",
+      "payload": {
+        "ticket_id": "T21",
+        "priority": "HIGH",
+        "correct": false
+      }
+    },
+    {
+      "seq": 40,
+      "tick": 6,
+      "type": "AGENT_RATED",
+      "agent_id": "a6",
+      "payload": {
+        "ticket_id": "T15",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 41,
+      "tick": 6,
+      "type": "AGENT_RATED",
+      "agent_id": "a6",
+      "payload": {
+        "ticket_id": "T03",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 42,
+      "tick": 6,
+      "type": "AGENT_RATED",
+      "agent_id": "a6",
+      "payload": {
+        "ticket_id": "T23",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 43,
+      "tick": 6,
+      "type": "PROBE_ANSWERED",
+      "agent_id": "a6",
+      "payload": {
+        "text": "I was sorting a support queue.",
+        "recognized": false
+      }
+    },
+    {
+      "seq": 44,
+      "tick": 6,
+      "type": "RUN_ENDED",
+      "agent_id": null,
+      "payload": {
+        "reason": "all_agents_done"
+      }
+    }
+  ],
+  "llm_calls": [
+    {
+      "agent_id": "a3",
+      "tick": 3,
+      "kind": "decision",
+      "attempt": 1,
+      "prompt": "fixture prompt for agent 3",
+      "response_text": "{\"picks\": [{\"ticket\": \"T20\", \"priority\": \"HIGH\"}, {\"ticket\": \"T15\", \"priority\": \"HIGH\"}, {\"ticket\": \"T03\", \"priority\": \"HIGH\"}, {\"ticket\": \"T02\", \"priority\": \"HIGH\"}], \"thought\": \"fixture\"}",
+      "reasoning_text": null,
+      "finish_reason": "stop",
+      "input_tokens": 1500,
+      "output_tokens": 60,
+      "tokens_estimated": false,
+      "parsed_ok": true,
+      "latency_ms": 1100
+    },
+    {
+      "agent_id": "a4",
+      "tick": 4,
+      "kind": "decision",
+      "attempt": 1,
+      "prompt": "fixture prompt for agent 4",
+      "response_text": "I think T01 matters.",
+      "reasoning_text": null,
+      "finish_reason": "stop",
+      "input_tokens": 1500,
+      "output_tokens": 8,
+      "tokens_estimated": false,
+      "parsed_ok": false,
+      "latency_ms": 900
+    },
+    {
+      "agent_id": "a4",
+      "tick": 4,
+      "kind": "decision",
+      "attempt": 2,
+      "prompt": "fixture prompt for agent 4",
+      "response_text": "{\"picks\": [{\"ticket\": \"T02\", \"priority\": \"HIGH\"}, {\"ticket\": \"T19\", \"priority\": \"HIGH\"}, {\"ticket\": \"T11\", \"priority\": \"HIGH\"}, {\"ticket\": \"T16\", \"priority\": \"HIGH\"}], \"thought\": \"fixture\"}",
+      "reasoning_text": null,
+      "finish_reason": "stop",
+      "input_tokens": 1500,
+      "output_tokens": 60,
+      "tokens_estimated": false,
+      "parsed_ok": true,
+      "latency_ms": 1100
+    },
+    {
+      "agent_id": "a5",
+      "tick": 5,
+      "kind": "decision",
+      "attempt": 1,
+      "prompt": "fixture prompt for agent 5",
+      "response_text": "{\"picks\": [{\"ticket\": \"T20\", \"priority\": \"HIGH\"}, {\"ticket\": \"T11\", \"priority\": \"HIGH\"}, {\"ticket\": \"T03\", \"priority\": \"HIGH\"}, {\"ticket\": \"T02\", \"priority\": \"HIGH\"}], \"thought\": \"fixture\"}",
+      "reasoning_text": null,
+      "finish_reason": "stop",
+      "input_tokens": 1500,
+      "output_tokens": 60,
+      "tokens_estimated": false,
+      "parsed_ok": true,
+      "latency_ms": 1100
+    },
+    {
+      "agent_id": "a6",
+      "tick": 6,
+      "kind": "decision",
+      "attempt": 1,
+      "prompt": "fixture prompt for agent 6",
+      "response_text": "{\"picks\": [{\"ticket\": \"T21\", \"priority\": \"HIGH\"}, {\"ticket\": \"T15\", \"priority\": \"HIGH\"}, {\"ticket\": \"T03\", \"priority\": \"HIGH\"}, {\"ticket\": \"T23\", \"priority\": \"HIGH\"}], \"thought\": \"fixture\"}",
+      "reasoning_text": null,
+      "finish_reason": "stop",
+      "input_tokens": 1500,
+      "output_tokens": 60,
+      "tokens_estimated": false,
+      "parsed_ok": true,
+      "latency_ms": 1100
+    },
+    {
+      "agent_id": "a6",
+      "tick": 6,
+      "kind": "probe",
+      "attempt": 1,
+      "prompt": "fixture probe prompt",
+      "response_text": "I was sorting a support queue.",
+      "reasoning_text": null,
+      "finish_reason": "stop",
+      "input_tokens": 1700,
+      "output_tokens": 12,
+      "tokens_estimated": false,
+      "parsed_ok": true,
+      "latency_ms": 700
+    }
+  ]
+}

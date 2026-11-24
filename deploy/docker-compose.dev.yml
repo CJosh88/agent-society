@@ -1,0 +1,9 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: asl
+      POSTGRES_USER: asl
+      POSTGRES_PASSWORD: asl
+    ports:
+      - "127.0.0.1:5432:5432"

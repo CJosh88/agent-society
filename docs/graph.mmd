@@ -1,0 +1,35 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	setup(setup)
+	next_agent(next_agent)
+	record(record)
+	probe(probe)
+	finish(finish)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> setup;
+	agent_turn\3a__end__ --> record;
+	next_agent -.-> agent_turn\3aperceive;
+	next_agent -.-> record;
+	probe --> finish;
+	record -.-> next_agent;
+	record -.-> probe;
+	setup --> next_agent;
+	finish --> __end__;
+	subgraph agent_turn
+	agent_turn\3aperceive(perceive)
+	agent_turn\3adecide(decide)
+	agent_turn\3avalidate(validate)
+	agent_turn\3a__end__(<p>__end__</p>)
+	agent_turn\3adecide --> agent_turn\3avalidate;
+	agent_turn\3aperceive --> agent_turn\3adecide;
+	agent_turn\3avalidate -.-> agent_turn\3a__end__;
+	agent_turn\3avalidate -.-> agent_turn\3adecide;
+	end
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
