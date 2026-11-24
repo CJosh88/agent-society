@@ -6,7 +6,7 @@ Design: [docs/designs/design.md](docs/designs/design.md) (v0.4). Prior-art check
 
 ## Status
 
-Built so far (milestones C0–C3): the contract and fixtures, the Spring API, the Python engine with a fake model, and the results and replay pages. No real model has been run yet. Pilots, calibration and pre-registration (C4), the Stage 1 batch and analysis (C5) and the RL stage (C6) are next. The earlier study (alert fatigue and herding in triage, v0.3) is preserved on the branch `v0.3-alert-fatigue-herding`.
+Built so far (milestones C0–C5): the contract and fixtures, the Spring API, the Python engine, the results and replay pages, the pilots and calibration, the signed `prereg-c1` tag, the Stage 1 batch (112 worlds on Llama 3.1 8B, gpt-oss-120b and two mixes; Haiku was not run) and the analysis. The results are in `results/results.md` and summarised in `docs/writeup.md`: showing earlier ratings hurt the weaker model only under the sorted list and made gpt-oss-120b much more accurate, and wrong ratings planted at the front of the line did real damage. The RL stage (C6) is next. The public site still shows the older data until the VPS is redeployed. The earlier study (alert fatigue and herding in triage, v0.3) is preserved on the branch `v0.3-alert-fatigue-herding`.
 
 ## How to run it (fake model, no keys)
 

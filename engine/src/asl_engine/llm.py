@@ -169,11 +169,12 @@ def to_result(msg: AIMessage, prompt: str, latency_ms: int) -> LlmResult:
 
 
 def is_transient(exc: BaseException) -> bool:
-    """429, 5xx and timeouts retry. A 400 never does."""
+    """429, 5xx, timeouts and dropped connections retry. A 400 never does."""
     status = getattr(exc, "status_code", None)
     if status is not None:
         return status == 429 or status >= 500
-    return isinstance(exc, (TimeoutError, httpx.TimeoutException)) or type(exc).__name__ == "APITimeoutError"
+    names = {"APITimeoutError", "APIConnectionError", "OpenAITimeoutError", "OpenAIConnectionError"}
+    return isinstance(exc, (TimeoutError, httpx.TransportError)) or type(exc).__name__ in names
 
 
 async def call_model(model: BaseChatModel, messages: list[BaseMessage]) -> LlmResult:

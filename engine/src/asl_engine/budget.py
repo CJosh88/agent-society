@@ -34,6 +34,11 @@ class Budget:
     def exceeded(self) -> bool:
         return self.total >= self.max_usd
 
+    @property
+    def remaining(self) -> float:
+        """Dollars left before the cap, floored at zero."""
+        return max(0.0, self.max_usd - self.total)
+
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(

@@ -9,64 +9,162 @@
 <body>
 <header>
   <h1>Agent Society Lab</h1>
-  <p class="lede">Can a line of LLM agents triaging support tickets talk itself into mistakes? Two hundred agents
-    act one after another on the same 24 tickets, each seeing how earlier agents rated them.</p>
+  <p class="lede">Small, replayable experiments on how groups of LLM agents influence each other. Every world is
+    played once, stored in full, and replayed here. Visitors never trigger model calls.</p>
+  <nav class="tabs" role="tablist" aria-label="Experiments">
+    <button type="button" role="tab" id="tab-triage-herding" data-tab="triage-herding" aria-controls="panel-triage-herding">
+      Triage herding <span class="badge live">results in</span></button>
+    <button type="button" role="tab" id="tab-alert-fatigue" data-tab="alert-fatigue" aria-controls="panel-alert-fatigue">
+      Alert fatigue <span class="badge">earlier design</span></button>
+    <button type="button" role="tab" id="tab-rl-training" data-tab="rl-training" aria-controls="panel-rl-training">
+      RL training <span class="badge">planned</span></button>
+  </nav>
 </header>
 <main>
-  <section id="featured">
-    <h2>Featured worlds</h2>
-    <div id="featured-body" class="cards" aria-live="polite">Loading…</div>
-  </section>
 
-  <section id="results">
-    <h2>Results</h2>
-    <div id="results-body" aria-live="polite">Loading…</div>
-  </section>
+  <!-- ========== Experiment 1: triage herding (live) ========== -->
+  <div role="tabpanel" id="panel-triage-herding" aria-labelledby="tab-triage-herding">
 
-  <section id="runs">
-    <h2>Worlds</h2>
-    <form class="filters" id="run-filters" aria-label="Filter worlds">
-      <label>Population
-        <select name="population">
-          <option value="">All</option>
-          <option value="llama-3.1-8b">Llama 3.1 8B</option>
-          <option value="gpt-oss-120b">gpt-oss-120b</option>
-          <option value="claude-haiku-5-5">Claude Haiku 5.5</option>
-          <option value="mix_early">Mixed: stronger model first</option>
-          <option value="mix_late">Mixed: stronger model last</option>
-          <option value="fake">Fake model (tests)</option>
-        </select>
-      </label>
-      <label>Condition
-        <select name="condition">
-          <option value="">All</option>
-          <option value="independent">Independent (no counts)</option>
-          <option value="weak">Weak influence (counts shown)</option>
-          <option value="strong">Strong influence (counts, sorted)</option>
-          <option value="seeded_wrong">Seeded wrong (first agents wrong)</option>
-        </select>
-      </label>
-    </form>
-    <div id="runs-body" class="table-wrap" aria-live="polite">Loading…</div>
-    <nav class="pager" id="pager" aria-label="Pages"></nav>
-  </section>
+    <section id="explainer">
+      <h2>What this experiment is</h2>
+      <p>A support desk has 24 open tickets. Twelve are serious (a double charge, a data leak, a hot charger) and
+        twelve are routine (a typo, a newsletter request, a loudly worded complaint about a parcel that is out for
+        delivery). The truth is known. Two hundred AI agents work through the queue <em>one after another</em>. Each
+        is a different imagined person with their own personality, and each picks four tickets and rates each one HIGH
+        or LOW priority.</p>
+      <p>The question is simple: <strong>when an agent can see how the agents before it rated the tickets, does the
+        line end up more wrong, or more right, than the same agents working alone?</strong> The same setup also asks
+        whether wrong ratings at the front of the line spread, and whether putting a stronger model at the front or
+        the back helps the weaker ones.</p>
 
-  <section id="about">
-    <h2>About</h2>
-    <p><strong>The question.</strong> When each agent can see how earlier agents rated the tickets, does the line
-      end up less accurate than agents working alone? Does it recover if the first agents are wrong, and does a
-      stronger model placed early or late change what a weaker model does? The tickets have a known truth: twelve are
-      serious and twelve are routine.</p>
-    <p><strong>The design.</strong> A world is 200 agents acting in order. Each picks four tickets and rates each
-      HIGH or LOW in one call. In the influence conditions it also sees, for every ticket, how many earlier agents
-      rated it HIGH. Eight worlds per cell share their persona and ticket-order seeds across conditions. The
-      method follows Hashemi et al. (arXiv 2610.30769, preprint). A Python LangGraph engine plays the worlds, a
-      Spring Boot API stores every event and raw model call, and this page replays them.</p>
-    <p><strong>The limits.</strong> These are tendencies of language models in a toy queue, not evidence about
-      people or about any production system. Sampling uses provider defaults, so reruns differ, and eight worlds per
-      cell can only detect large differences.</p>
-    <p id="about-links" class="muted"></p>
-  </section>
+      <h3>What an agent sees</h3>
+      <ul>
+        <li>A short persona (name, job and a few personality traits) and a neutral description of an ordinary afternoon on the desk.</li>
+        <li>The 24 tickets in a fixed order for that agent.</li>
+        <li>In the influence conditions, next to each ticket, how many earlier agents rated it HIGH out of how many rated it.</li>
+      </ul>
+      <p>Nothing in the prompt says this is a test, and no agent knows the truth.</p>
+
+      <h3>The four conditions</h3>
+      <dl class="defs">
+        <dt>Independent</dt><dd>No counts. Each agent works alone. This is the baseline.</dd>
+        <dt>Weak influence</dt><dd>Counts are shown next to each ticket.</dd>
+        <dt>Strong influence</dt><dd>Counts are shown and the list is sorted with the most-flagged tickets on top.</dd>
+        <dt>Seeded wrong</dt><dd>As weak influence, but the first 20 agents are scripted to rate wrongly, so the rest of the line starts from bad information. Single-model lines only.</dd>
+      </dl>
+
+      <h3>The populations</h3>
+      <p>All 200 agents run on one model (Llama 3.1 8B, gpt-oss-120b, or Claude Haiku 5.5 where run), or on a mix: in
+        <em>stronger first</em> the first 60 agents are gpt-oss-120b and the other 140 are Llama; in <em>stronger last</em>
+        it is the other way round. Eight worlds are played for every combination, and the eight world seeds are shared across
+        conditions, so a world differs between conditions only in what the agents see.</p>
+
+      <h3>How to read the results</h3>
+      <ul>
+        <li><strong>World accuracy</strong> is the share of ratings that match the truth (HIGH for serious, LOW for routine), averaged over the eight worlds. The bars show a 95% bootstrap interval over worlds.</li>
+        <li><strong>Differences</strong> are each condition minus Independent, in percentage points, for the same population. Populations are never pooled.</li>
+        <li>With eight worlds per cell only fairly large differences can be told apart from noise, so treat small gaps as unproven.</li>
+        <li>Use <em>Replay</em> on any world to watch the line fill in agent by agent, switch on <em>Reveal truth</em> to see which ratings were right, and read each agent's own reasoning.</li>
+      </ul>
+    </section>
+
+    <section id="references">
+      <h2>References</h2>
+      <p class="muted">All of these are arXiv preprints and are cited as such. This experiment adapts the design of the first one.</p>
+      <ol class="refs">
+        <li><strong>Hashemi, Ji, Chen and Macy.</strong> <a href="https://arxiv.org/abs/2610.30769" rel="noopener">LLM Multi-Agent Systems Are Vulnerable to Herding and Runaway Cascades</a> (arXiv 2610.30769).
+          Source of the design (agents see running counts from earlier agents, many parallel worlds) and of the measures used here: divergence, unpredictability, early-mover correlation and self-correction.</li>
+        <li><strong>Qu, Fu and Hu.</strong> <a href="https://arxiv.org/abs/2606.01637" rel="noopener">Easier to Mislead Than to Correct: Harmful and Beneficial Revision in LLM Conformity</a> (arXiv 2606.01637).
+          Source of the harmful and beneficial revision measure, comparing an answer with and without peers.</li>
+        <li><strong>Song et al.</strong> <a href="https://arxiv.org/abs/2508.18321" rel="noopener">LLMs Can't Handle Peer Pressure: Crumbling under Multi-Agent Social Interactions</a> (arXiv 2508.18321, "KAIROS").
+          Peer reliability with a known truth, and training small models to resist it; background for the planned RL stage.</li>
+        <li><strong>Zhou et al.</strong> <a href="https://arxiv.org/abs/2601.21742" rel="noopener">Epistemic Context Learning: Building Trust the Right Way in LLM-Based Multi-Agent Systems</a> (arXiv 2601.21742).
+          Reinforcement learning against misleading peers; also background for the RL stage.</li>
+        <li><strong>Han et al.</strong> <a href="https://arxiv.org/abs/2601.05606" rel="noopener">Conformity Dynamics in LLM Multi-Agent Systems: The Roles of Topology and Self-Social Weighting</a> (arXiv 2601.05606).
+          Mixed-model groups, where a stronger model in a central position helps.</li>
+        <li><strong>Jain and Krishnamurthy.</strong> <a href="https://arxiv.org/abs/2411.01271" rel="noopener">Interacting Large Language Model Agents. Interpretable Models and Social Learning</a> (arXiv 2411.01271).
+          Theory: why sequential agents that watch each other can lock into an information cascade.</li>
+      </ol>
+      <p class="note">What is and is not new here, and how far the searches went, is in <code>docs/prior-art.md</code> in the repository.</p>
+    </section>
+
+    <section id="featured">
+      <h2>Featured worlds</h2>
+      <div id="featured-body" class="cards" aria-live="polite">Loading…</div>
+    </section>
+
+    <section id="results">
+      <h2>Results</h2>
+      <div id="results-body" aria-live="polite">Loading…</div>
+    </section>
+
+    <section id="runs">
+      <h2>Worlds</h2>
+      <form class="filters" id="run-filters" aria-label="Filter worlds">
+        <label>Population
+          <select name="population">
+            <option value="">All</option>
+            <option value="llama-3.1-8b">Llama 3.1 8B</option>
+            <option value="gpt-oss-120b">gpt-oss-120b</option>
+            <option value="claude-haiku-5-5">Claude Haiku 5.5</option>
+            <option value="mix_early">Mixed: stronger model first</option>
+            <option value="mix_late">Mixed: stronger model last</option>
+            <option value="fake">Fake model (tests)</option>
+          </select>
+        </label>
+        <label>Condition
+          <select name="condition">
+            <option value="">All</option>
+            <option value="independent">Independent (no counts)</option>
+            <option value="weak">Weak influence (counts shown)</option>
+            <option value="strong">Strong influence (counts, sorted)</option>
+            <option value="seeded_wrong">Seeded wrong (first agents wrong)</option>
+          </select>
+        </label>
+      </form>
+      <div id="runs-body" class="table-wrap" aria-live="polite">Loading…</div>
+      <nav class="pager" id="pager" aria-label="Pages"></nav>
+    </section>
+
+    <section id="about">
+      <h2>Limits</h2>
+      <p>These are tendencies of language models in a toy queue, not evidence about people or about any production
+        system. Sampling uses provider defaults, so reruns differ, and eight worlds per cell can only detect large
+        differences. A Python LangGraph engine plays the worlds, a Spring Boot API stores every event and raw model
+        call, and this page replays them.</p>
+      <p id="about-links" class="muted"></p>
+    </section>
+  </div>
+
+  <!-- ========== Experiment 2: alert fatigue (earlier design) ========== -->
+  <div role="tabpanel" id="panel-alert-fatigue" aria-labelledby="tab-alert-fatigue" hidden>
+    <section>
+      <h2>Alert fatigue</h2>
+      <p><span class="badge">earlier design, no results here</span></p>
+      <p>A single agent is on call for a shop's payment systems and gets a run of alerts that clear themselves,
+        followed by one real alert that does not. The question is whether the false alarms make the agent less likely
+        to escalate the real one. Three conditions varied the number of false alarms before the real alert (none, three
+        or six).</p>
+      <p>This design was piloted but never run at scale: in the pilots most models escalated the real alert every
+        time, so there was nothing to measure. It was replaced by the triage experiment. The code and the pilot design
+        are kept on the repository branch <code>v0.3-alert-fatigue-herding</code>, and no runs from it are shown on this site.</p>
+    </section>
+  </div>
+
+  <!-- ========== Experiment 3: RL training (planned) ========== -->
+  <div role="tabpanel" id="panel-rl-training" aria-labelledby="tab-rl-training" hidden>
+    <section>
+      <h2>RL training</h2>
+      <p><span class="badge">planned, not started</span></p>
+      <p>The second stage would train a small open model (Qwen, with LoRA adapters) by reinforcement learning (GRPO)
+        inside the triage world, rewarding it for rating tickets correctly even when the earlier ratings it can see are
+        wrong. It would then be compared against the models in the first experiment on held-out worlds, including the
+        seeded-wrong condition, over several training seeds.</p>
+      <p>Training models to resist peer pressure has been done before (see references 3 and 4 on the Triage herding tab).
+        The claim here would be limited to a world-level, sequential, multi-seed evaluation. The plan is written first
+        and frozen before any training run.</p>
+    </section>
+  </div>
 </main>
 <script type="module" src="js/results.js"></script>
 </body>

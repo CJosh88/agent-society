@@ -2,6 +2,8 @@
 
 import json
 
+import httpx
+
 import pytest
 from tenacity import wait_none
 from typer.testing import CliRunner
@@ -88,3 +90,41 @@ def test_batch_can_be_limited_to_some_conditions(monkeypatch, isolated_results):
     assert sorted((x["condition"], x["world_seed"]) for x in rows) == [
         ("independent", 1), ("independent", 2), ("weak", 1), ("weak", 2)]
     assert runner.invoke(app, ["batch", "--models", "fake", "--conditions", "calm"]).exit_code != 0
+
+
+def test_batch_does_not_rerun_worlds_the_api_already_has(monkeypatch, isolated_results):
+    monkeypatch.setenv("ASL_API_URL", "http://127.0.0.1:9")
+    have = {("fake", "independent", 1)}
+
+    async def exists(client, population, condition, world_seed):
+        return (population, condition, world_seed) in have
+
+    ran = []
+
+    async def run_one(population, condition, world_seed, **kw):
+        ran.append((population, condition, world_seed))
+        raise RuntimeError("stop here")  # the post is not needed for this check
+
+    monkeypatch.setattr(cli, "_exists", exists)
+    monkeypatch.setattr(cli, "run_one", run_one)
+    r = runner.invoke(app, ["batch", "--models", "fake", "--runs", "2", "--seed", "1", "--agents", "4",
+                            "--conditions", "independent"])
+    assert r.exit_code == 0
+    assert ran == [("fake", "independent", 2)]
+    assert "'exists': 1" in r.output
+
+
+async def test_exists_answers_only_for_200_and_404_and_raises_otherwise(monkeypatch):
+    monkeypatch.setenv("ASL_API_URL", "http://api.test")
+    status = {"code": 200}
+
+    def handler(request):
+        return httpx.Response(status["code"], json={})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as c:
+        assert await cli._exists(c, "fake", "weak", 1) is True
+        status["code"] = 404
+        assert await cli._exists(c, "fake", "weak", 1) is False
+        status["code"] = 503
+        with pytest.raises(httpx.HTTPStatusError):
+            await cli._exists(c, "fake", "weak", 1)
