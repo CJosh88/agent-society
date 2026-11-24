@@ -82,3 +82,9 @@ Choices the design doc leaves open, and changes made to the repo. One entry each
 - **Revision floor not reported.** The design asks for the `independent` worlds' own run-to-run disagreement as a floor. Each cell has one run per world seed and the run id is fixed, so there are no repeats to compare. The report says so instead of inventing a floor.
 - **Parse-failure filter.** The sensitivity check drops worlds whose parse failures exceed 5% of agents (failures divided by 200), since the summary carries failure counts, not per-agent flags.
 - **H4 Agreeableness.** Accuracy by the persona's Agreeableness level (low, medium, high) per condition, with the effect against `independent`. Descriptive only.
+
+## C5 batch interruption (2026-11-24)
+
+- **What happened.** The first Stage 1 batch created 42 of 112 worlds, then a network drop made the other 70 fail within about 7 seconds with `OpenAIConnectionError` or a timeout (log kept in `results/failures-attempt1.jsonl`). Dropped connections were not classed as transient, so nothing was retried, and each queued world failed straight away.
+- **Two plumbing fixes, made after the `prereg-c1` tag.** (1) `is_transient` now also retries connection errors (`httpx.TransportError` and the OpenAI connection and timeout error names), with the same 4 attempts. (2) `asl batch` asks the API whether a world exists before running it, so a rerun costs nothing for finished worlds. Before this a rerun would have paid for all model calls and then met a 409. Neither change touches prompts, tickets, personas, the pairing or `PROMPT_VERSION`, which are what the tag freezes.
+- **The 42 finished worlds stay.** They were produced by the tagged code, and the rerun produces the rest with the same prompts and tickets.
