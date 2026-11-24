@@ -2,6 +2,8 @@
 
 import json
 
+import httpx
+
 import pytest
 from tenacity import wait_none
 from typer.testing import CliRunner
@@ -110,3 +112,19 @@ def test_batch_does_not_rerun_worlds_the_api_already_has(monkeypatch, isolated_r
     assert r.exit_code == 0
     assert ran == [("fake", "independent", 2)]
     assert "'exists': 1" in r.output
+
+
+async def test_exists_answers_only_for_200_and_404_and_raises_otherwise(monkeypatch):
+    monkeypatch.setenv("ASL_API_URL", "http://api.test")
+    status = {"code": 200}
+
+    def handler(request):
+        return httpx.Response(status["code"], json={})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as c:
+        assert await cli._exists(c, "fake", "weak", 1) is True
+        status["code"] = 404
+        assert await cli._exists(c, "fake", "weak", 1) is False
+        status["code"] = 503
+        with pytest.raises(httpx.HTTPStatusError):
+            await cli._exists(c, "fake", "weak", 1)

@@ -104,12 +104,16 @@ def batch(
 
 
 async def _exists(client: httpx.AsyncClient, population: str, condition: str, world_seed: int) -> bool:
-    """True when the API already holds this world, so a rerun does not pay for it again."""
-    try:
-        r = await client.get(f"{config.api_url()}/api/runs/{run_id(population, condition, world_seed)}", timeout=15)
-    except httpx.HTTPError:
+    """True when the API already holds this world, so a rerun does not pay for it again.
+
+    Only 200 (held) and 404 (not held) are answers. Anything else, including a 5xx or a dropped connection, raises,
+    so an unhealthy API fails the world cheaply instead of looking like a missing one that gets run and paid for.
+    """
+    r = await client.get(f"{config.api_url()}/api/runs/{run_id(population, condition, world_seed)}", timeout=15)
+    if r.status_code == 404:
         return False
-    return r.status_code == 200
+    r.raise_for_status()
+    return True
 
 
 async def _batch(specs: list[tuple[str, str, int]], agents: int, pilot: bool, budget: Budget) -> int:
