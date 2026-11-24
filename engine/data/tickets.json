@@ -1,0 +1,122 @@
+[
+  {
+    "id": "T01",
+    "text": "Charged twice for my last order (#88213). I checked and five other customers in the shop's review thread say the same thing happened this morning. The payment provider's status page lists an open incident for card payments.",
+    "truth": "serious"
+  },
+  {
+    "id": "T02",
+    "text": "Hi, small thing. After I logged in just now, the \"my orders\" page showed a different name and a list of orders that are not mine, with their delivery addresses. I logged out straight away.",
+    "truth": "serious"
+  },
+  {
+    "id": "T03",
+    "text": "We are a trade customer. Since 9 this morning our warehouse scanners cannot connect to your order sync, and 40 of our orders are stuck. Our trucks arrive at 4 pm and we cannot load without the pick lists.",
+    "truth": "serious"
+  },
+  {
+    "id": "T04",
+    "text": "The phone charger I bought from you got very hot overnight and melted the plug and the socket. I have photos. My daughter's bed is next to that socket. I have stopped using it.",
+    "truth": "serious"
+  },
+  {
+    "id": "T05",
+    "text": "Hi, the password reset email never arrives for me. Tried a few times. A colleague says the same. We use the account for a subscription, no idea when it renews.",
+    "truth": "serious"
+  },
+  {
+    "id": "T06",
+    "text": "Following up again on the $2,300 refund for our business order. You said it was approved a few weeks ago and my bank has not shown it yet. Could you check when it will arrive?",
+    "truth": "serious"
+  },
+  {
+    "id": "T07",
+    "text": "The code SAVE90 was posted on a public deals forum this morning. It is stacking on top of sale prices, and I can see 11 orders at about 90% off in the last hour. Thought you would want to know.",
+    "truth": "serious"
+  },
+  {
+    "id": "T08",
+    "text": "The invoice PDF I downloaded has another company's name, address and tax number on it instead of mine. The order number is mine. My accountant says we cannot use it.",
+    "truth": "serious"
+  },
+  {
+    "id": "T09",
+    "text": "Our broker mentioned the paperwork for our 300 unit order may be missing a safety certificate. Could you send over whatever you have on file when you get a chance? Delivery is due soon.",
+    "truth": "serious"
+  },
+  {
+    "id": "T10",
+    "text": "Two of my friends and I all saw card charges we did not make, in the days after ordering from your shop. All three of us used the same site. The bank has cancelled our cards.",
+    "truth": "serious"
+  },
+  {
+    "id": "T11",
+    "text": "The checkout is showing the $49 jacket for $0.49. I just bought three. I am telling you because it looks like a mistake.",
+    "truth": "serious"
+  },
+  {
+    "id": "T12",
+    "text": "I asked on the 3rd for my account and data to be deleted. The form said done, but my login still seems to work. Is that expected? Thanks.",
+    "truth": "serious"
+  },
+  {
+    "id": "T13",
+    "text": "Hello, I ordered a blue scarf by mistake and want to change the shipping address on the same order before it is sent. The new address is below. Thank you!",
+    "truth": "routine"
+  },
+  {
+    "id": "T14",
+    "text": "My order arrived with the box crushed on one corner and the bag inside a bit creased. It is still usable. Could you tell me whether this happens often with your carrier? I am quite upset about it.",
+    "truth": "routine"
+  },
+  {
+    "id": "T15",
+    "text": "Could you send me a copy of the invoice for my order from last month? I need it for my expenses.",
+    "truth": "routine"
+  },
+  {
+    "id": "T16",
+    "text": "I noticed a typo on your About page: \"recieve\" in the second paragraph. Lovely shop otherwise!",
+    "truth": "routine"
+  },
+  {
+    "id": "T17",
+    "text": "Do you offer gift wrapping, and does it cost extra? It is for a birthday in two weeks.",
+    "truth": "routine"
+  },
+  {
+    "id": "T18",
+    "text": "THIS IS UNACCEPTABLE!! My parcel is two days late. The tracking page says it left the depot this morning and is out for delivery.",
+    "truth": "routine"
+  },
+  {
+    "id": "T19",
+    "text": "I have asked THREE TIMES to be taken off your newsletter list and the emails keep coming. This is harassment. Please remove me from the list today.",
+    "truth": "routine"
+  },
+  {
+    "id": "T20",
+    "text": "What is the best way to wash the wool sweater I bought? The label has worn off.",
+    "truth": "routine"
+  },
+  {
+    "id": "T21",
+    "text": "URGENT: my 5% welcome code expired yesterday and I want it extended today or I will leave a one-star review.",
+    "truth": "routine"
+  },
+  {
+    "id": "T22",
+    "text": "Your site is great. It would be nice to have a dark mode for evening browsing. Just a suggestion.",
+    "truth": "routine"
+  },
+  {
+    "id": "T23",
+    "text": "Someone has my old surname and email on file and I need them changed urgently. I think the old email may be in other lists too. Can you update my account name and email?",
+    "truth": "routine"
+  },
+  {
+    "id": "T24",
+    "text": "The shoes I bought gave me a blister on the first wear. Nothing serious, it has healed. How long do I have to return them? I bought them 12 days ago.",
+    "truth": "routine"
+  }
+]

@@ -1,0 +1,1496 @@
+{
+  "run": {
+    "id": "0308b50f-23e0-533d-82d4-f66907929be7",
+    "experiment": "cascade_v1",
+    "scenario": "triage_cascade",
+    "condition": "weak",
+    "population": "llama-3.1-8b",
+    "world_seed": 0,
+    "prompt_version": "c1",
+    "engine_version": "0.4.0",
+    "pilot": false,
+    "started_at": "2026-11-24T10:00:00Z",
+    "ended_at": "2026-11-24T10:00:30Z"
+  },
+  "agents": [
+    {
+      "agent_id": "a1",
+      "name": "Mira Okafor",
+      "role": "agent",
+      "persona": {
+        "persona_id": "p01",
+        "name": "Mira Okafor",
+        "age": 34,
+        "occupation": "data analyst",
+        "big5": {
+          "O": "high",
+          "C": "high",
+          "E": "low",
+          "A": "high",
+          "N": "low"
+        },
+        "bio": "You are careful and curious."
+      }
+    },
+    {
+      "agent_id": "a2",
+      "name": "Tom Reyes",
+      "role": "agent",
+      "persona": {
+        "persona_id": "p02",
+        "name": "Tom Reyes",
+        "age": 56,
+        "occupation": "data analyst",
+        "big5": {
+          "O": "low",
+          "C": "high",
+          "E": "low",
+          "A": "low",
+          "N": "low"
+        },
+        "bio": "You are quiet and blunt."
+      }
+    },
+    {
+      "agent_id": "a3",
+      "name": "Lena Vogel",
+      "role": "agent",
+      "persona": {
+        "persona_id": "p03",
+        "name": "Lena Vogel",
+        "age": 41,
+        "occupation": "accountant",
+        "big5": {
+          "O": "low",
+          "C": "high",
+          "E": "high",
+          "A": "high",
+          "N": "high"
+        },
+        "bio": "You are warm and a little anxious."
+      }
+    },
+    {
+      "agent_id": "a4",
+      "name": "Arjun Mehta",
+      "role": "agent",
+      "persona": {
+        "persona_id": "p04",
+        "name": "Arjun Mehta",
+        "age": 29,
+        "occupation": "support lead",
+        "big5": {
+          "O": "high",
+          "C": "low",
+          "E": "high",
+          "A": "low",
+          "N": "low"
+        },
+        "bio": "You are quick and direct."
+      }
+    },
+    {
+      "agent_id": "a5",
+      "name": "Noor Hassan",
+      "role": "agent",
+      "persona": {
+        "persona_id": "p05",
+        "name": "Noor Hassan",
+        "age": 38,
+        "occupation": "warehouse manager",
+        "big5": {
+          "O": "low",
+          "C": "low",
+          "E": "low",
+          "A": "high",
+          "N": "high"
+        },
+        "bio": "You follow routine."
+      }
+    },
+    {
+      "agent_id": "a6",
+      "name": "Jonas Becker",
+      "role": "agent",
+      "persona": {
+        "persona_id": "p06",
+        "name": "Jonas Becker",
+        "age": 52,
+        "occupation": "operations assistant",
+        "big5": {
+          "O": "high",
+          "C": "high",
+          "E": "high",
+          "A": "low",
+          "N": "low"
+        },
+        "bio": "You are organised."
+      }
+    }
+  ],
+  "events": [
+    {
+      "seq": 0,
+      "tick": 1,
+      "type": "AGENT_SPAWNED",
+      "agent_id": "a1",
+      "payload": {
+        "position": 1,
+        "model": "llama-3.1-8b"
+      }
+    },
+    {
+      "seq": 1,
+      "tick": 1,
+      "type": "TICKETS_SHOWN",
+      "agent_id": "a1",
+      "payload": {
+        "order": [
+          "T15",
+          "T01",
+          "T18",
+          "T08",
+          "T07",
+          "T12",
+          "T23",
+          "T22",
+          "T11",
+          "T05",
+          "T03",
+          "T21",
+          "T04",
+          "T20",
+          "T06",
+          "T19",
+          "T10",
+          "T24",
+          "T16",
+          "T17",
+          "T09",
+          "T02",
+          "T14",
+          "T13"
+        ],
+        "counts": {
+          "T01": {
+            "high": 0,
+            "total": 0
+          },
+          "T02": {
+            "high": 0,
+            "total": 0
+          },
+          "T03": {
+            "high": 0,
+            "total": 0
+          },
+          "T04": {
+            "high": 0,
+            "total": 0
+          },
+          "T05": {
+            "high": 0,
+            "total": 0
+          },
+          "T06": {
+            "high": 0,
+            "total": 0
+          },
+          "T07": {
+            "high": 0,
+            "total": 0
+          },
+          "T08": {
+            "high": 0,
+            "total": 0
+          },
+          "T09": {
+            "high": 0,
+            "total": 0
+          },
+          "T10": {
+            "high": 0,
+            "total": 0
+          },
+          "T11": {
+            "high": 0,
+            "total": 0
+          },
+          "T12": {
+            "high": 0,
+            "total": 0
+          },
+          "T13": {
+            "high": 0,
+            "total": 0
+          },
+          "T14": {
+            "high": 0,
+            "total": 0
+          },
+          "T15": {
+            "high": 0,
+            "total": 0
+          },
+          "T16": {
+            "high": 0,
+            "total": 0
+          },
+          "T17": {
+            "high": 0,
+            "total": 0
+          },
+          "T18": {
+            "high": 0,
+            "total": 0
+          },
+          "T19": {
+            "high": 0,
+            "total": 0
+          },
+          "T20": {
+            "high": 0,
+            "total": 0
+          },
+          "T21": {
+            "high": 0,
+            "total": 0
+          },
+          "T22": {
+            "high": 0,
+            "total": 0
+          },
+          "T23": {
+            "high": 0,
+            "total": 0
+          },
+          "T24": {
+            "high": 0,
+            "total": 0
+          }
+        }
+      }
+    },
+    {
+      "seq": 2,
+      "tick": 1,
+      "type": "AGENT_PICKED",
+      "agent_id": "a1",
+      "payload": {
+        "ticket_ids": [
+          "T15",
+          "T01",
+          "T18",
+          "T08"
+        ],
+        "thought": "These look like the ones to settle first.",
+        "scripted": false
+      }
+    },
+    {
+      "seq": 3,
+      "tick": 1,
+      "type": "AGENT_RATED",
+      "agent_id": "a1",
+      "payload": {
+        "ticket_id": "T15",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 4,
+      "tick": 1,
+      "type": "AGENT_RATED",
+      "agent_id": "a1",
+      "payload": {
+        "ticket_id": "T01",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 5,
+      "tick": 1,
+      "type": "AGENT_RATED",
+      "agent_id": "a1",
+      "payload": {
+        "ticket_id": "T18",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 6,
+      "tick": 1,
+      "type": "AGENT_RATED",
+      "agent_id": "a1",
+      "payload": {
+        "ticket_id": "T08",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 7,
+      "tick": 2,
+      "type": "AGENT_SPAWNED",
+      "agent_id": "a2",
+      "payload": {
+        "position": 2,
+        "model": "llama-3.1-8b"
+      }
+    },
+    {
+      "seq": 8,
+      "tick": 2,
+      "type": "TICKETS_SHOWN",
+      "agent_id": "a2",
+      "payload": {
+        "order": [
+          "T17",
+          "T02",
+          "T23",
+          "T15",
+          "T07",
+          "T13",
+          "T01",
+          "T05",
+          "T20",
+          "T08",
+          "T09",
+          "T19",
+          "T21",
+          "T10",
+          "T06",
+          "T14",
+          "T12",
+          "T04",
+          "T18",
+          "T16",
+          "T11",
+          "T22",
+          "T03",
+          "T24"
+        ],
+        "counts": {
+          "T01": {
+            "high": 1,
+            "total": 1
+          },
+          "T02": {
+            "high": 0,
+            "total": 0
+          },
+          "T03": {
+            "high": 0,
+            "total": 0
+          },
+          "T04": {
+            "high": 0,
+            "total": 0
+          },
+          "T05": {
+            "high": 0,
+            "total": 0
+          },
+          "T06": {
+            "high": 0,
+            "total": 0
+          },
+          "T07": {
+            "high": 0,
+            "total": 0
+          },
+          "T08": {
+            "high": 1,
+            "total": 1
+          },
+          "T09": {
+            "high": 0,
+            "total": 0
+          },
+          "T10": {
+            "high": 0,
+            "total": 0
+          },
+          "T11": {
+            "high": 0,
+            "total": 0
+          },
+          "T12": {
+            "high": 0,
+            "total": 0
+          },
+          "T13": {
+            "high": 0,
+            "total": 0
+          },
+          "T14": {
+            "high": 0,
+            "total": 0
+          },
+          "T15": {
+            "high": 0,
+            "total": 1
+          },
+          "T16": {
+            "high": 0,
+            "total": 0
+          },
+          "T17": {
+            "high": 0,
+            "total": 0
+          },
+          "T18": {
+            "high": 0,
+            "total": 1
+          },
+          "T19": {
+            "high": 0,
+            "total": 0
+          },
+          "T20": {
+            "high": 0,
+            "total": 0
+          },
+          "T21": {
+            "high": 0,
+            "total": 0
+          },
+          "T22": {
+            "high": 0,
+            "total": 0
+          },
+          "T23": {
+            "high": 0,
+            "total": 0
+          },
+          "T24": {
+            "high": 0,
+            "total": 0
+          }
+        }
+      }
+    },
+    {
+      "seq": 9,
+      "tick": 2,
+      "type": "AGENT_PICKED",
+      "agent_id": "a2",
+      "payload": {
+        "ticket_ids": [
+          "T17",
+          "T02",
+          "T23",
+          "T15"
+        ],
+        "thought": "These look like the ones to settle first.",
+        "scripted": false
+      }
+    },
+    {
+      "seq": 10,
+      "tick": 2,
+      "type": "AGENT_RATED",
+      "agent_id": "a2",
+      "payload": {
+        "ticket_id": "T17",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 11,
+      "tick": 2,
+      "type": "AGENT_RATED",
+      "agent_id": "a2",
+      "payload": {
+        "ticket_id": "T02",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 12,
+      "tick": 2,
+      "type": "AGENT_RATED",
+      "agent_id": "a2",
+      "payload": {
+        "ticket_id": "T23",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 13,
+      "tick": 2,
+      "type": "AGENT_RATED",
+      "agent_id": "a2",
+      "payload": {
+        "ticket_id": "T15",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 14,
+      "tick": 2,
+      "type": "ACTION_PARSE_FAILED",
+      "agent_id": "a2",
+      "payload": {
+        "raw_excerpt": "I think T01 matters.",
+        "truncated": false
+      }
+    },
+    {
+      "seq": 15,
+      "tick": 3,
+      "type": "AGENT_SPAWNED",
+      "agent_id": "a3",
+      "payload": {
+        "position": 3,
+        "model": "llama-3.1-8b"
+      }
+    },
+    {
+      "seq": 16,
+      "tick": 3,
+      "type": "TICKETS_SHOWN",
+      "agent_id": "a3",
+      "payload": {
+        "order": [
+          "T17",
+          "T13",
+          "T06",
+          "T24",
+          "T09",
+          "T05",
+          "T07",
+          "T03",
+          "T19",
+          "T15",
+          "T10",
+          "T04",
+          "T02",
+          "T14",
+          "T12",
+          "T18",
+          "T08",
+          "T11",
+          "T16",
+          "T20",
+          "T01",
+          "T21",
+          "T22",
+          "T23"
+        ],
+        "counts": {
+          "T01": {
+            "high": 1,
+            "total": 1
+          },
+          "T02": {
+            "high": 1,
+            "total": 1
+          },
+          "T03": {
+            "high": 0,
+            "total": 0
+          },
+          "T04": {
+            "high": 0,
+            "total": 0
+          },
+          "T05": {
+            "high": 0,
+            "total": 0
+          },
+          "T06": {
+            "high": 0,
+            "total": 0
+          },
+          "T07": {
+            "high": 0,
+            "total": 0
+          },
+          "T08": {
+            "high": 1,
+            "total": 1
+          },
+          "T09": {
+            "high": 0,
+            "total": 0
+          },
+          "T10": {
+            "high": 0,
+            "total": 0
+          },
+          "T11": {
+            "high": 0,
+            "total": 0
+          },
+          "T12": {
+            "high": 0,
+            "total": 0
+          },
+          "T13": {
+            "high": 0,
+            "total": 0
+          },
+          "T14": {
+            "high": 0,
+            "total": 0
+          },
+          "T15": {
+            "high": 0,
+            "total": 2
+          },
+          "T16": {
+            "high": 0,
+            "total": 0
+          },
+          "T17": {
+            "high": 0,
+            "total": 1
+          },
+          "T18": {
+            "high": 0,
+            "total": 1
+          },
+          "T19": {
+            "high": 0,
+            "total": 0
+          },
+          "T20": {
+            "high": 0,
+            "total": 0
+          },
+          "T21": {
+            "high": 0,
+            "total": 0
+          },
+          "T22": {
+            "high": 0,
+            "total": 0
+          },
+          "T23": {
+            "high": 0,
+            "total": 1
+          },
+          "T24": {
+            "high": 0,
+            "total": 0
+          }
+        }
+      }
+    },
+    {
+      "seq": 17,
+      "tick": 3,
+      "type": "AGENT_PICKED",
+      "agent_id": "a3",
+      "payload": {
+        "ticket_ids": [
+          "T17",
+          "T13",
+          "T06",
+          "T24"
+        ],
+        "thought": "These look like the ones to settle first.",
+        "scripted": false
+      }
+    },
+    {
+      "seq": 18,
+      "tick": 3,
+      "type": "AGENT_RATED",
+      "agent_id": "a3",
+      "payload": {
+        "ticket_id": "T17",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 19,
+      "tick": 3,
+      "type": "AGENT_RATED",
+      "agent_id": "a3",
+      "payload": {
+        "ticket_id": "T13",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 20,
+      "tick": 3,
+      "type": "AGENT_RATED",
+      "agent_id": "a3",
+      "payload": {
+        "ticket_id": "T06",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 21,
+      "tick": 3,
+      "type": "AGENT_RATED",
+      "agent_id": "a3",
+      "payload": {
+        "ticket_id": "T24",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 22,
+      "tick": 4,
+      "type": "AGENT_SPAWNED",
+      "agent_id": "a4",
+      "payload": {
+        "position": 4,
+        "model": "llama-3.1-8b"
+      }
+    },
+    {
+      "seq": 23,
+      "tick": 4,
+      "type": "TICKETS_SHOWN",
+      "agent_id": "a4",
+      "payload": {
+        "order": [
+          "T06",
+          "T20",
+          "T01",
+          "T12",
+          "T15",
+          "T24",
+          "T03",
+          "T23",
+          "T02",
+          "T08",
+          "T05",
+          "T14",
+          "T09",
+          "T19",
+          "T13",
+          "T07",
+          "T11",
+          "T22",
+          "T21",
+          "T18",
+          "T10",
+          "T04",
+          "T16",
+          "T17"
+        ],
+        "counts": {
+          "T01": {
+            "high": 1,
+            "total": 1
+          },
+          "T02": {
+            "high": 1,
+            "total": 1
+          },
+          "T03": {
+            "high": 0,
+            "total": 0
+          },
+          "T04": {
+            "high": 0,
+            "total": 0
+          },
+          "T05": {
+            "high": 0,
+            "total": 0
+          },
+          "T06": {
+            "high": 1,
+            "total": 1
+          },
+          "T07": {
+            "high": 0,
+            "total": 0
+          },
+          "T08": {
+            "high": 1,
+            "total": 1
+          },
+          "T09": {
+            "high": 0,
+            "total": 0
+          },
+          "T10": {
+            "high": 0,
+            "total": 0
+          },
+          "T11": {
+            "high": 0,
+            "total": 0
+          },
+          "T12": {
+            "high": 0,
+            "total": 0
+          },
+          "T13": {
+            "high": 0,
+            "total": 1
+          },
+          "T14": {
+            "high": 0,
+            "total": 0
+          },
+          "T15": {
+            "high": 0,
+            "total": 2
+          },
+          "T16": {
+            "high": 0,
+            "total": 0
+          },
+          "T17": {
+            "high": 0,
+            "total": 2
+          },
+          "T18": {
+            "high": 0,
+            "total": 1
+          },
+          "T19": {
+            "high": 0,
+            "total": 0
+          },
+          "T20": {
+            "high": 0,
+            "total": 0
+          },
+          "T21": {
+            "high": 0,
+            "total": 0
+          },
+          "T22": {
+            "high": 0,
+            "total": 0
+          },
+          "T23": {
+            "high": 0,
+            "total": 1
+          },
+          "T24": {
+            "high": 0,
+            "total": 1
+          }
+        }
+      }
+    },
+    {
+      "seq": 24,
+      "tick": 4,
+      "type": "AGENT_PICKED",
+      "agent_id": "a4",
+      "payload": {
+        "ticket_ids": [
+          "T06",
+          "T20",
+          "T01",
+          "T12"
+        ],
+        "thought": "These look like the ones to settle first.",
+        "scripted": false
+      }
+    },
+    {
+      "seq": 25,
+      "tick": 4,
+      "type": "AGENT_RATED",
+      "agent_id": "a4",
+      "payload": {
+        "ticket_id": "T06",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 26,
+      "tick": 4,
+      "type": "AGENT_RATED",
+      "agent_id": "a4",
+      "payload": {
+        "ticket_id": "T20",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 27,
+      "tick": 4,
+      "type": "AGENT_RATED",
+      "agent_id": "a4",
+      "payload": {
+        "ticket_id": "T01",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 28,
+      "tick": 4,
+      "type": "AGENT_RATED",
+      "agent_id": "a4",
+      "payload": {
+        "ticket_id": "T12",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 29,
+      "tick": 5,
+      "type": "AGENT_SPAWNED",
+      "agent_id": "a5",
+      "payload": {
+        "position": 5,
+        "model": "llama-3.1-8b"
+      }
+    },
+    {
+      "seq": 30,
+      "tick": 5,
+      "type": "TICKETS_SHOWN",
+      "agent_id": "a5",
+      "payload": {
+        "order": [
+          "T14",
+          "T10",
+          "T18",
+          "T04",
+          "T24",
+          "T13",
+          "T08",
+          "T22",
+          "T11",
+          "T07",
+          "T21",
+          "T12",
+          "T23",
+          "T01",
+          "T15",
+          "T17",
+          "T05",
+          "T19",
+          "T03",
+          "T16",
+          "T09",
+          "T20",
+          "T02",
+          "T06"
+        ],
+        "counts": {
+          "T01": {
+            "high": 2,
+            "total": 2
+          },
+          "T02": {
+            "high": 1,
+            "total": 1
+          },
+          "T03": {
+            "high": 0,
+            "total": 0
+          },
+          "T04": {
+            "high": 0,
+            "total": 0
+          },
+          "T05": {
+            "high": 0,
+            "total": 0
+          },
+          "T06": {
+            "high": 2,
+            "total": 2
+          },
+          "T07": {
+            "high": 0,
+            "total": 0
+          },
+          "T08": {
+            "high": 1,
+            "total": 1
+          },
+          "T09": {
+            "high": 0,
+            "total": 0
+          },
+          "T10": {
+            "high": 0,
+            "total": 0
+          },
+          "T11": {
+            "high": 0,
+            "total": 0
+          },
+          "T12": {
+            "high": 1,
+            "total": 1
+          },
+          "T13": {
+            "high": 0,
+            "total": 1
+          },
+          "T14": {
+            "high": 0,
+            "total": 0
+          },
+          "T15": {
+            "high": 0,
+            "total": 2
+          },
+          "T16": {
+            "high": 0,
+            "total": 0
+          },
+          "T17": {
+            "high": 0,
+            "total": 2
+          },
+          "T18": {
+            "high": 0,
+            "total": 1
+          },
+          "T19": {
+            "high": 0,
+            "total": 0
+          },
+          "T20": {
+            "high": 0,
+            "total": 1
+          },
+          "T21": {
+            "high": 0,
+            "total": 0
+          },
+          "T22": {
+            "high": 0,
+            "total": 0
+          },
+          "T23": {
+            "high": 0,
+            "total": 1
+          },
+          "T24": {
+            "high": 0,
+            "total": 1
+          }
+        }
+      }
+    },
+    {
+      "seq": 31,
+      "tick": 5,
+      "type": "AGENT_PICKED",
+      "agent_id": "a5",
+      "payload": {
+        "ticket_ids": [
+          "T14",
+          "T10",
+          "T18",
+          "T04"
+        ],
+        "thought": "These look like the ones to settle first.",
+        "scripted": false
+      }
+    },
+    {
+      "seq": 32,
+      "tick": 5,
+      "type": "AGENT_RATED",
+      "agent_id": "a5",
+      "payload": {
+        "ticket_id": "T14",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 33,
+      "tick": 5,
+      "type": "AGENT_RATED",
+      "agent_id": "a5",
+      "payload": {
+        "ticket_id": "T10",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 34,
+      "tick": 5,
+      "type": "AGENT_RATED",
+      "agent_id": "a5",
+      "payload": {
+        "ticket_id": "T18",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 35,
+      "tick": 5,
+      "type": "AGENT_RATED",
+      "agent_id": "a5",
+      "payload": {
+        "ticket_id": "T04",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 36,
+      "tick": 6,
+      "type": "AGENT_SPAWNED",
+      "agent_id": "a6",
+      "payload": {
+        "position": 6,
+        "model": "llama-3.1-8b"
+      }
+    },
+    {
+      "seq": 37,
+      "tick": 6,
+      "type": "TICKETS_SHOWN",
+      "agent_id": "a6",
+      "payload": {
+        "order": [
+          "T24",
+          "T09",
+          "T14",
+          "T07",
+          "T19",
+          "T08",
+          "T13",
+          "T02",
+          "T05",
+          "T01",
+          "T20",
+          "T17",
+          "T06",
+          "T18",
+          "T10",
+          "T23",
+          "T04",
+          "T11",
+          "T03",
+          "T12",
+          "T21",
+          "T22",
+          "T16",
+          "T15"
+        ],
+        "counts": {
+          "T01": {
+            "high": 2,
+            "total": 2
+          },
+          "T02": {
+            "high": 1,
+            "total": 1
+          },
+          "T03": {
+            "high": 0,
+            "total": 0
+          },
+          "T04": {
+            "high": 1,
+            "total": 1
+          },
+          "T05": {
+            "high": 0,
+            "total": 0
+          },
+          "T06": {
+            "high": 2,
+            "total": 2
+          },
+          "T07": {
+            "high": 0,
+            "total": 0
+          },
+          "T08": {
+            "high": 1,
+            "total": 1
+          },
+          "T09": {
+            "high": 0,
+            "total": 0
+          },
+          "T10": {
+            "high": 1,
+            "total": 1
+          },
+          "T11": {
+            "high": 0,
+            "total": 0
+          },
+          "T12": {
+            "high": 1,
+            "total": 1
+          },
+          "T13": {
+            "high": 0,
+            "total": 1
+          },
+          "T14": {
+            "high": 0,
+            "total": 1
+          },
+          "T15": {
+            "high": 0,
+            "total": 2
+          },
+          "T16": {
+            "high": 0,
+            "total": 0
+          },
+          "T17": {
+            "high": 0,
+            "total": 2
+          },
+          "T18": {
+            "high": 0,
+            "total": 2
+          },
+          "T19": {
+            "high": 0,
+            "total": 0
+          },
+          "T20": {
+            "high": 0,
+            "total": 1
+          },
+          "T21": {
+            "high": 0,
+            "total": 0
+          },
+          "T22": {
+            "high": 0,
+            "total": 0
+          },
+          "T23": {
+            "high": 0,
+            "total": 1
+          },
+          "T24": {
+            "high": 0,
+            "total": 1
+          }
+        }
+      }
+    },
+    {
+      "seq": 38,
+      "tick": 6,
+      "type": "AGENT_PICKED",
+      "agent_id": "a6",
+      "payload": {
+        "ticket_ids": [
+          "T24",
+          "T09",
+          "T14",
+          "T07"
+        ],
+        "thought": "These look like the ones to settle first.",
+        "scripted": false
+      }
+    },
+    {
+      "seq": 39,
+      "tick": 6,
+      "type": "AGENT_RATED",
+      "agent_id": "a6",
+      "payload": {
+        "ticket_id": "T24",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 40,
+      "tick": 6,
+      "type": "AGENT_RATED",
+      "agent_id": "a6",
+      "payload": {
+        "ticket_id": "T09",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 41,
+      "tick": 6,
+      "type": "AGENT_RATED",
+      "agent_id": "a6",
+      "payload": {
+        "ticket_id": "T14",
+        "priority": "LOW",
+        "correct": true
+      }
+    },
+    {
+      "seq": 42,
+      "tick": 6,
+      "type": "AGENT_RATED",
+      "agent_id": "a6",
+      "payload": {
+        "ticket_id": "T07",
+        "priority": "HIGH",
+        "correct": true
+      }
+    },
+    {
+      "seq": 43,
+      "tick": 6,
+      "type": "PROBE_ANSWERED",
+      "agent_id": "a6",
+      "payload": {
+        "text": "I was sorting a support queue.",
+        "recognized": false
+      }
+    },
+    {
+      "seq": 44,
+      "tick": 6,
+      "type": "RUN_ENDED",
+      "agent_id": null,
+      "payload": {
+        "reason": "all_agents_done"
+      }
+    }
+  ],
+  "llm_calls": [
+    {
+      "agent_id": "a1",
+      "tick": 1,
+      "kind": "decision",
+      "attempt": 1,
+      "prompt": "fixture prompt for agent 1",
+      "response_text": "{\"picks\": [{\"ticket\": \"T15\", \"priority\": \"HIGH\"}, {\"ticket\": \"T01\", \"priority\": \"HIGH\"}, {\"ticket\": \"T18\", \"priority\": \"HIGH\"}, {\"ticket\": \"T08\", \"priority\": \"HIGH\"}], \"thought\": \"fixture\"}",
+      "reasoning_text": null,
+      "finish_reason": "stop",
+      "input_tokens": 1500,
+      "output_tokens": 60,
+      "tokens_estimated": false,
+      "parsed_ok": true,
+      "latency_ms": 1100
+    },
+    {
+      "agent_id": "a2",
+      "tick": 2,
+      "kind": "decision",
+      "attempt": 1,
+      "prompt": "fixture prompt for agent 2",
+      "response_text": "I think T01 matters.",
+      "reasoning_text": null,
+      "finish_reason": "stop",
+      "input_tokens": 1500,
+      "output_tokens": 8,
+      "tokens_estimated": false,
+      "parsed_ok": false,
+      "latency_ms": 900
+    },
+    {
+      "agent_id": "a2",
+      "tick": 2,
+      "kind": "decision",
+      "attempt": 2,
+      "prompt": "fixture prompt for agent 2",
+      "response_text": "{\"picks\": [{\"ticket\": \"T17\", \"priority\": \"HIGH\"}, {\"ticket\": \"T02\", \"priority\": \"HIGH\"}, {\"ticket\": \"T23\", \"priority\": \"HIGH\"}, {\"ticket\": \"T15\", \"priority\": \"HIGH\"}], \"thought\": \"fixture\"}",
+      "reasoning_text": null,
+      "finish_reason": "stop",
+      "input_tokens": 1500,
+      "output_tokens": 60,
+      "tokens_estimated": false,
+      "parsed_ok": true,
+      "latency_ms": 1100
+    },
+    {
+      "agent_id": "a3",
+      "tick": 3,
+      "kind": "decision",
+      "attempt": 1,
+      "prompt": "fixture prompt for agent 3",
+      "response_text": "{\"picks\": [{\"ticket\": \"T17\", \"priority\": \"HIGH\"}, {\"ticket\": \"T13\", \"priority\": \"HIGH\"}, {\"ticket\": \"T06\", \"priority\": \"HIGH\"}, {\"ticket\": \"T24\", \"priority\": \"HIGH\"}], \"thought\": \"fixture\"}",
+      "reasoning_text": null,
+      "finish_reason": "stop",
+      "input_tokens": 1500,
+      "output_tokens": 60,
+      "tokens_estimated": false,
+      "parsed_ok": true,
+      "latency_ms": 1100
+    },
+    {
+      "agent_id": "a4",
+      "tick": 4,
+      "kind": "decision",
+      "attempt": 1,
+      "prompt": "fixture prompt for agent 4",
+      "response_text": "{\"picks\": [{\"ticket\": \"T06\", \"priority\": \"HIGH\"}, {\"ticket\": \"T20\", \"priority\": \"HIGH\"}, {\"ticket\": \"T01\", \"priority\": \"HIGH\"}, {\"ticket\": \"T12\", \"priority\": \"HIGH\"}], \"thought\": \"fixture\"}",
+      "reasoning_text": null,
+      "finish_reason": "stop",
+      "input_tokens": 1500,
+      "output_tokens": 60,
+      "tokens_estimated": false,
+      "parsed_ok": true,
+      "latency_ms": 1100
+    },
+    {
+      "agent_id": "a5",
+      "tick": 5,
+      "kind": "decision",
+      "attempt": 1,
+      "prompt": "fixture prompt for agent 5",
+      "response_text": "{\"picks\": [{\"ticket\": \"T14\", \"priority\": \"HIGH\"}, {\"ticket\": \"T10\", \"priority\": \"HIGH\"}, {\"ticket\": \"T18\", \"priority\": \"HIGH\"}, {\"ticket\": \"T04\", \"priority\": \"HIGH\"}], \"thought\": \"fixture\"}",
+      "reasoning_text": null,
+      "finish_reason": "stop",
+      "input_tokens": 1500,
+      "output_tokens": 60,
+      "tokens_estimated": false,
+      "parsed_ok": true,
+      "latency_ms": 1100
+    },
+    {
+      "agent_id": "a6",
+      "tick": 6,
+      "kind": "decision",
+      "attempt": 1,
+      "prompt": "fixture prompt for agent 6",
+      "response_text": "{\"picks\": [{\"ticket\": \"T24\", \"priority\": \"HIGH\"}, {\"ticket\": \"T09\", \"priority\": \"HIGH\"}, {\"ticket\": \"T14\", \"priority\": \"HIGH\"}, {\"ticket\": \"T07\", \"priority\": \"HIGH\"}], \"thought\": \"fixture\"}",
+      "reasoning_text": null,
+      "finish_reason": "stop",
+      "input_tokens": 1500,
+      "output_tokens": 60,
+      "tokens_estimated": false,
+      "parsed_ok": true,
+      "latency_ms": 1100
+    },
+    {
+      "agent_id": "a6",
+      "tick": 6,
+      "kind": "probe",
+      "attempt": 1,
+      "prompt": "fixture probe prompt",
+      "response_text": "I was sorting a support queue.",
+      "reasoning_text": null,
+      "finish_reason": "stop",
+      "input_tokens": 1700,
+      "output_tokens": 12,
+      "tokens_estimated": false,
+      "parsed_ok": true,
+      "latency_ms": 700
+    }
+  ]
+}

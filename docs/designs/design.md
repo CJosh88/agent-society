@@ -14,7 +14,7 @@ Agent Society Lab asks whether a line of LLM agents triaging support tickets can
 - **This repo's `main` was reset to start from this doc.** The new design reuses the v0.3 engine modules, API ingest and results patterns, and replay structure. They are copied back from the branch with `git checkout v0.3-alert-fatigue-herding -- <path>` and then changed (see Target files).
 - **The Music Lab design as adapted by Hashemi et al. (arXiv 2610.30769, 22 Oct 2026, preprint).** I read the full text. It supplies the design pattern (parallel worlds, an independent baseline, a signal built from earlier agents' choices) and the measures (KL divergence, unpredictability, early-mover correlation, self-correction by half-split). It tested single-model populations on a taste task with no right answer, and names mixed-model teams, communication and incentives as untested.
 
-**What is new here (claimed with care).** The pipeline is mixed-model as well as single-model, the task has a ground truth, and a condition seeds the first agents with wrong ratings to test recovery. See Prior art for how far that claim can go. A literature check on the novelty claim is milestone C0.
+**What is and is not new.** The C0 literature check (`docs/prior-art.md`) found that endogenous counts, ground-truth conformity tests and RL against social pressure each have close prior work. What the check did not find is the combination here: a long sequential line with endogenous counts, a ticket-triage task, a mixed-model line with a controlled position for the stronger model, and a wrong-seeding recovery condition, all measured with Hashemi's world-level measures. That is a narrow claim, resting on a handful of searches, and the write-up says so. Alert fatigue in LLM agents was searched and not found, and is outside this study.
 
 **Stage 2 (RL).** After Stage 1 results, a small open model is trained with LoRA and GRPO inside this environment to be robust to wrong early signals, and evaluated with the same metrics on held-out seeds. Stage 2 has its own design freeze (see RL stage).
 
@@ -97,6 +97,7 @@ The default pair for the mixed populations is weaker = `llama-3.1-8b` and strong
 - **Unpredictability** `U`: the mean absolute difference in a ticket's market share across all 28 pairs of the 8 worlds, averaged over the 24 tickets. The independent baseline uses the 28 pairs of the 8 independent worlds.
 - **Early-mover correlation:** the Pearson correlation between per-ticket HIGH shares among the first 30 agents and among all later agents in the same world, pooled over worlds.
 - **Self-correction against truth:** split each world's chronological ratings into two halves, take the Spearman correlation between per-ticket HIGH counts in each half and the truth (serious = 1, routine = 0, ties handled by average ranks), and report `Δρ = ρ₂ − ρ₁`. Positive means later agents moved toward the truth. This changes the paper's measure, which used the independent-world shares as the reference.
+- **Harmful and beneficial revision** (adapted from Qu et al. and KAIROS): because world seed *w* fixes each position's persona and ticket order across conditions, an agent's rating of a ticket in the `independent` world at the same position is a counterfactual for its rating under influence. For tickets picked in both worlds, a harmful revision is correct in `independent` and wrong under influence, and a beneficial revision is the reverse. Reported per population and condition. Provider-default sampling makes this counterfactual noisy, so the `independent` worlds' own run-to-run disagreement is reported as the floor.
 - **Secondary:** selection shares (which tickets get picked), false-HIGH and missed-HIGH rates, and the parse-failure rate.
 
 **Analysis** (`analysis.py`)
@@ -127,10 +128,15 @@ Verification status is stated because several sources were seen only as search s
 | Weng et al. (ICLR 2025); Zhu et al. (ACL 2025); Cho et al. (2025); Bellina et al. (2026); Qu et al. (2026); Hussain and Nielbo (2026) | Peer-answer conformity on question-answering tasks, including unanimous confederates and the role of confidence and group size. | Named and described in Hashemi's related work only; not opened |
 | Zhong et al. (EMNLP Findings 2025); Peng et al. (2026); Wu et al. (ACL Findings 2025) | Sequential ratings with accumulating signals, popularity cues, endogenous counts on a Q&A platform. | Same; not opened |
 | Akata et al. (Nature Human Behaviour 2025), Huynh et al. (arXiv 2601.19082), Gao et al. (arXiv 2410.19599) and others | Behaviour in repeated games is conditional on payoff scale, language, framing and model. | Opened in the research report; see `reports/LLM agent game theory sandbox.md` |
+| Han et al., arXiv 2601.05606 (Jan 2026, preprint) | 7 agents on a ground-truth misinformation task. Hub-and-spoke and graph topologies, mixed GPT-3.5, GPT-4o and Llama groups. A stronger hub gives higher accuracy, and denser graphs raise the risk of confident wrong consensus. | Abstract read; the rest through a model summary |
+| Qu et al., arXiv 2606.01637 (Jun 2026, preprint) | Multiple-choice QA with six scripted peers. All-wrong peers raise harmful revision from 15.6% to 62.9%, against 32.7% to 51.5% for beneficial revision under all-correct peers (four 7–9B open models). | Abstract and HTML read |
+| KAIROS, Song et al., arXiv 2508.18321 (v3 Dec 2025, preprint) | Quiz benchmark with scripted peers of varying reliability. SFT and GRPO on Qwen2.5 and Llama models. GRPO improves accuracy but not always robustness. | Abstract and about half the HTML read |
+| Epistemic Context Learning, Zhou et al., arXiv 2601.21742 (Jan 2026, preprint) | RL with a peer-recognition auxiliary reward on Qwen3-4B and 8B. Mixed-model natural setting with one strong peer. Test sets of 90 and 40 questions, no variance reported. | Abstract and most of the HTML read |
+| Jain and Krishnamurthy, arXiv 2411.01271 | Theory: Bayesian social learning among LLM agents reaches an information cascade. | Search summary only |
 | Piche et al. (arXiv 2511.19405) | Naive multi-agent GRPO collapses to defection in social dilemmas; advantage alignment learns tit-for-tat. | Snippet-level; not opened |
 | SPIRAL (arXiv 2506.24119), MARSHAL (arXiv 2510.15414) | Self-play RL on small models, gains on reasoning benchmarks. | Abstracts read |
 
-**Reading of the gap.** Unanimous scripted peers on Q&A tasks, and endogenous counts on a taste task, are documented. This design differs in three ways: a ground truth for every item, mixed-model lines with a controlled position for the stronger model, and an explicit wrong-seeding condition. The searches behind "I found no study of mixed-model sequential triage with known truth" were shallow, so it is a lead and not a claim until milestone C0 is done.
+**Reading of the gap.** Unanimous scripted peers on Q&A tasks with a ground truth (Qu et al., KAIROS, ECL) and endogenous counts on a taste task (Hashemi) are both documented, and so is RL training against social pressure (KAIROS, ECL). Mixed-model groups with a stronger model in a particular role appear in Han et al. (hub position) and ECL (one strong peer), but neither varies where a stronger agent sits in a long sequential line. The C0 searches found no study that combines endogenous counts, a known truth and a mixed line with controlled position, and no LLM study of alert fatigue or of triage with peer counts. These are the result of a few searches, not an exhaustive review, so the write-up treats them as "not found" and not as "does not exist".
 
 ## Architecture
 
@@ -155,9 +161,9 @@ A copy of the v0.3 architecture with one structural change: the unit of work is 
 - `experiment` const `cascade_v1`. `scenario` enum `triage_cascade`.
 - `condition` enum `independent`, `weak`, `strong`, `seeded_wrong`. A run-level check ties each to the scenario.
 - `population` (string) replaces the single model: one of `llama-3.1-8b`, `gpt-oss-120b`, `claude-haiku-5-5`, `mix_early`, `mix_late`, or `fake`. The API keeps a `model` column for the population label.
-- `world_seed` replaces `seed`.
+- `world_seed` replaces `seed` in the bundle; the database column stays `seed`.
 - Agent roles: `agent` and `scripted`. `agent_id` pattern `^a[0-9]{1,3}$`, positions 1–200.
-- Event types: `AGENT_SPAWNED{position, model}`, `TICKETS_SHOWN{counts}` (only when counts are shown), `AGENT_RATED{ticket_id, priority, correct}`, `AGENT_PICKED{ticket_ids}`, `ACTION_PARSE_FAILED`, `PROBE_ANSWERED`, `RUN_ENDED`. All carry `tick` = the agent position.
+- Event types: `AGENT_SPAWNED{position, model}`, `TICKETS_SHOWN{order, counts}` (every agent, `counts` is null in `independent`), `AGENT_PICKED{ticket_ids, thought, scripted}`, `AGENT_RATED{ticket_id, priority, correct}`, `ACTION_PARSE_FAILED{raw_excerpt, truncated}`, `PROBE_ANSWERED{text, recognized}`, `RUN_ENDED{reason}`. Agent events carry `tick` = the agent's position (1–200). `PROBE_ANSWERED` and `RUN_ENDED` carry the last position.
 - Derived fields stored on `runs` at ingest: `accuracy`, `rated_count`, `parse_failures`, `recognised_sample`.
 
 Ingest is one `@Transactional` method, `Run` and `Agent` implement `Persistable`, and a repeated post returns 409 (treated as done by the client). The run id is `uuid5` of `population|scenario|condition|world_seed|prompt_version`.
@@ -200,10 +206,11 @@ Two pages as in v0.3, `index.html` (results and run list) and `replay.html`, pla
 Stage 2 starts only after Stage 1 results are in, and it has its own short design addendum, `docs/designs/rl-stage.md`, frozen before any training run. What is decided here:
 
 - **Environment:** a thin Gym-style wrapper over the game master, exposing one world as an episode in which the learner sits at a fixed position and sees the counts the earlier agents produced. Earlier agents are replayed from stored Stage 1 worlds, not generated live, so training is cheap and deterministic.
+- **Prior work:** KAIROS and Epistemic Context Learning already train small models with GRPO or RL against peer pressure on question-answering tasks. KAIROS reports that GRPO raises accuracy but can lower robustness, and ECL reports that a naive peer-recognition reward was hacked. Stage 2 therefore does not claim that RL can reduce conformity. It tests whether the reduction holds up on world-level measures in a sequential line of endogenous counts, on held-out worlds and several seeds, which the prior work did not report.
 - **Learner:** a small open model (Qwen, 1.5B–3B) with LoRA, first supervised on valid-format replies, then GRPO.
 - **Reward:** the fraction of the learner's four ratings that are correct, with a penalty for parse failures. To block reward hacking by always rating HIGH, the catalogue is balanced (12 serious, 12 routine) and the held-out evaluation reports false-HIGH and missed-HIGH rates separately.
 - **Splits:** training and evaluation use disjoint world seeds, disjoint tickets (the 24-ticket catalogue is split by a second, frozen catalogue for evaluation), and disjoint personas.
-- **Evaluation:** the Stage 1 measures on held-out worlds, including `seeded_wrong`, comparing the base model, the supervised model and the GRPO model against the frozen API models.
+- **Evaluation:** the Stage 1 measures on held-out worlds, including `seeded_wrong`, comparing the base model, the supervised model and the GRPO model against the frozen API models. Robustness is reported as the change in accuracy between `independent` and influenced worlds (as KAIROS does), alongside accuracy itself, so a gain in one does not hide a loss in the other. Results use at least 3 training seeds, since the prior work reports small test sets and no variance.
 - **Compute:** one rented 24 GB Linux GPU, since the TRL and vLLM tooling is Linux-first (inferred, not verified here). The engine and viewer stay on Windows. A first short pilot run measures real GPU time before any budget is committed.
 - **Isolation:** Stage 2 runs are posted with `experiment = cascade_rl_v1` so they never enter Stage 1 results.
 
@@ -264,9 +271,9 @@ The monorepo is `agent-society-lab/` (this repo). `main` starts from this doc al
 Run in order. Each ends with commands Claude Code runs itself. C0–C3 need no API keys. Commit after each one as `C<n>: <title>`.
 
 1. **C0 — Novelty check and contracts.** `docs/prior-art.md` with the queries run, the papers opened (the six conformity papers listed above are opened or replaced), and a verdict on the three claimed differences. The schema, two fixtures, the README stub with the hypotheses, an empty `decisions.md`.
-   - Done when: `uv run --with jsonschema python -c "import json,jsonschema; s=json.load(open('contracts/run-bundle.schema.json')); [jsonschema.validate(json.load(open(f)), s) for f in ('contracts/fixtures/bundle-weak-small.json','contracts/fixtures/bundle-seeded-wrong-small.json')]"` exits 0, and `docs/prior-art.md` records a verdict.
+   - Done when: `uv run --with jsonschema python -c "import json,jsonschema; s=json.load(open('contracts/run-bundle.schema.json')); [jsonschema.validate(json.load(open(f)), s) for f in ('contracts/fixtures/bundle-weak-small.json','contracts/fixtures/bundle-seeded-wrong-small.json')]"` exits 0, and `docs/prior-art.md` records a verdict. (Done 2026-11-23.)
 2. **C1 — Spring API, dev database and CI.** Copy and adapt the v0.3 API.
-   - Done when: `docker compose -f deploy/docker-compose.dev.yml up -d`, then `cd api && ./mvnw -B verify` passes, the failsafe reports list RunIngestIT, AdminKeyIT, ResultsIT and OpenApiExportIT, and `contracts/openapi.yaml` exists.
+   - Done when: `cd api && ./mvnw -B verify` passes (the integration tests start their own Postgres through Testcontainers, so Docker must be running; the dev database from `docker compose -f deploy/docker-compose.dev.yml up -d` is needed from C2 on), the failsafe reports list RunIngestIT, AdminKeyIT, ResultsIT and OpenApiExportIT, and `contracts/openapi.yaml` exists.
 3. **C2 — Engine with the fake model.** All engine modules, `tickets.json` (draft), `personas.json`, the agent subgraph, `docs/graph.mmd`.
    - Done when: `cd engine && uv run pytest` passes. With the API running, `uv run asl batch --models fake --runs 2 --seed 0 --agents 20` exits 0 and `curl -s localhost:8080/api/runs | jq .page.totalElements` prints 8 (the `fake` population: 4 conditions × 2 worlds, with a smaller world of 20 agents; `--agents` defaults to 200), and a rerun leaves the count unchanged. The mixed populations are covered by unit tests with the fake model, which assign `fake` to both roles.
 4. **C3 — Replay frontend and README.** Both pages with plain shapes.
@@ -322,6 +329,7 @@ Per 1,000 turns: Llama 3.1 8B about $0.55, gpt-oss-120b about $0.64 (more if rea
 | Mixed-population result is null | H2 fails | Reported as a null; the design still yields the single-model results |
 | Reward hacking in Stage 2 (always HIGH) | A meaningless RL result | Balanced catalogue, separate false-HIGH and missed-HIGH rates, held-out tickets |
 | A preprint's numbers change | The cited context shifts | Cite it as a preprint and avoid relying on its exact figures |
+| Stage 2 overlaps with KAIROS and ECL | The RL idea is not new | State the overlap, and claim only the world-level, sequential and multi-seed evaluation |
 | Windows install trouble for TRL and vLLM | Stage 2 cannot train locally | Train on a rented Linux pod; keep Windows for the engine and viewer |
 | Public thoughts include unsuitable text | A reputational problem | A thoughts toggle and a spot-check of featured worlds |
 
