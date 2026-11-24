@@ -125,7 +125,7 @@ async def _batch(specs: list[tuple[str, str, int]], agents: int, pilot: bool, bu
                                         "error": f"{type(e).__name__}: {e}"[:500], "at": time.time()}) + "\n")
             done = sum(counts.values())
             if done % 10 == 0 or done == len(specs):
-                typer.echo(f"{done}/{len(specs)} {counts} spent=${budget.total:.2f}")
+                typer.echo(f"{done}/{len(specs)} {counts} spent=${budget.total:.2f} left=${budget.remaining:.2f}")
 
     async with httpx.AsyncClient() as client:
         await asyncio.gather(*(one(client, spec) for spec in specs))

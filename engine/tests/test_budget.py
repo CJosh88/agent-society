@@ -37,3 +37,12 @@ def test_a_lower_cap_applies_to_an_existing_total(tmp_path):
     a.save()
     assert not Budget(8, path).exceeded
     assert Budget(3, path).exceeded
+
+
+def test_remaining_is_the_cap_minus_spend_and_never_negative(tmp_path):
+    b = Budget(1.0, tmp_path / "spend.json")
+    assert b.remaining == 1.0
+    b.total = 0.25
+    assert b.remaining == 0.75
+    b.total = 3.0
+    assert b.remaining == 0.0
