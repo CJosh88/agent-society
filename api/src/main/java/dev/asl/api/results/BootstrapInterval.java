@@ -47,6 +47,6 @@ final class BootstrapInterval {
 	private static double[] summary(double point, double[] samples) {
 		Arrays.sort(samples);
 		return new double[] { point, samples[(int) Math.floor(0.025 * (samples.length - 1))],
-				samples[(int) Math.ceil(0.975 * (samples.length - 1))] };
+				samples[Math.min(samples.length - 1, (int) Math.ceil(0.975 * (samples.length - 1)))] };
 	}
 }

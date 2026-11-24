@@ -12,6 +12,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 @Component
 public class AdminKeyInterceptor implements HandlerInterceptor {
 
+	private static final int MAX_HEADER_CHARS = 256;
+
 	private final byte[] key;
 
 	public AdminKeyInterceptor(AslProperties props) {
@@ -24,7 +26,7 @@ public class AdminKeyInterceptor implements HandlerInterceptor {
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
 		String given = request.getHeader("X-Admin-Key");
-		if (given != null && MessageDigest.isEqual(key, given.getBytes(StandardCharsets.UTF_8))) {
+		if (given != null && given.length() <= MAX_HEADER_CHARS && MessageDigest.isEqual(key, given.getBytes(StandardCharsets.UTF_8))) {
 			return true;
 		}
 		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
