@@ -36,6 +36,7 @@ class Budget:
 
     @property
     def remaining(self) -> float:
+        """Dollars left before the cap, floored at zero."""
         return max(0.0, self.max_usd - self.total)
 
     def save(self) -> None:
