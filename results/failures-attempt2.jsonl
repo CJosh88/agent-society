@@ -1,0 +1,8 @@
+{"population": "gpt-oss-120b", "condition": "independent", "world_seed": 6, "error": "OpenAIConnectionError: Connection error.", "at": 1795549312.6255414}
+{"population": "gpt-oss-120b", "condition": "seeded_wrong", "world_seed": 5, "error": "OpenAIConnectionError: Connection error.", "at": 1795549312.6265407}
+{"population": "mix_late", "condition": "weak", "world_seed": 4, "error": "OpenAIConnectionError: Connection error.", "at": 1795549312.6275406}
+{"population": "gpt-oss-120b", "condition": "weak", "world_seed": 5, "error": "OpenAIConnectionError: Connection error.", "at": 1795549312.6275406}
+{"population": "mix_early", "condition": "weak", "world_seed": 2, "error": "OpenAIConnectionError: Connection error.", "at": 1795549312.6505396}
+{"population": "gpt-oss-120b", "condition": "independent", "world_seed": 4, "error": "OpenAIConnectionError: Connection error.", "at": 1795549312.6515386}
+{"population": "gpt-oss-120b", "condition": "strong", "world_seed": 3, "error": "OpenAIConnectionError: Connection error.", "at": 1795549312.6535394}
+{"population": "gpt-oss-120b", "condition": "seeded_wrong", "world_seed": 6, "error": "OpenAIConnectionError: Connection error.", "at": 1795549312.6555395}

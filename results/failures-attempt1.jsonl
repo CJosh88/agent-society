@@ -1,0 +1,70 @@
+{"population": "mix_late", "condition": "strong", "world_seed": 1, "error": "OpenAITimeoutError: Request timed out.", "at": 1795543782.5898407}
+{"population": "gpt-oss-120b", "condition": "strong", "world_seed": 0, "error": "OpenAITimeoutError: Request timed out.", "at": 1795543782.590842}
+{"population": "gpt-oss-120b", "condition": "independent", "world_seed": 3, "error": "OpenAITimeoutError: Request timed out.", "at": 1795543782.590842}
+{"population": "gpt-oss-120b", "condition": "weak", "world_seed": 1, "error": "OpenAITimeoutError: Request timed out.", "at": 1795543782.591841}
+{"population": "mix_late", "condition": "strong", "world_seed": 3, "error": "OpenAITimeoutError: Request timed out.", "at": 1795543782.5928416}
+{"population": "mix_late", "condition": "weak", "world_seed": 2, "error": "OpenAITimeoutError: Request timed out.", "at": 1795543782.5928416}
+{"population": "llama-3.1-8b", "condition": "seeded_wrong", "world_seed": 4, "error": "OpenAITimeoutError: Request timed out.", "at": 1795543782.5938401}
+{"population": "mix_late", "condition": "independent", "world_seed": 2, "error": "OpenAITimeoutError: Request timed out.", "at": 1795543782.5938401}
+{"population": "mix_early", "condition": "strong", "world_seed": 4, "error": "OpenAIConnectionError: Connection error.", "at": 1795543783.243785}
+{"population": "mix_late", "condition": "independent", "world_seed": 6, "error": "OpenAIConnectionError: Connection error.", "at": 1795543783.337863}
+{"population": "mix_late", "condition": "strong", "world_seed": 7, "error": "OpenAIConnectionError: Connection error.", "at": 1795543783.5010955}
+{"population": "gpt-oss-120b", "condition": "independent", "world_seed": 2, "error": "OpenAIConnectionError: Connection error.", "at": 1795543783.5020964}
+{"population": "llama-3.1-8b", "condition": "weak", "world_seed": 6, "error": "OpenAIConnectionError: Connection error.", "at": 1795543783.5020964}
+{"population": "mix_early", "condition": "strong", "world_seed": 0, "error": "OpenAIConnectionError: Connection error.", "at": 1795543783.6107821}
+{"population": "mix_early", "condition": "independent", "world_seed": 3, "error": "OpenAIConnectionError: Connection error.", "at": 1795543783.6112938}
+{"population": "llama-3.1-8b", "condition": "weak", "world_seed": 7, "error": "OpenAIConnectionError: Connection error.", "at": 1795543783.6693423}
+{"population": "llama-3.1-8b", "condition": "independent", "world_seed": 4, "error": "OpenAIConnectionError: Connection error.", "at": 1795543783.9202106}
+{"population": "mix_early", "condition": "weak", "world_seed": 6, "error": "OpenAIConnectionError: Connection error.", "at": 1795543783.9950795}
+{"population": "llama-3.1-8b", "condition": "strong", "world_seed": 4, "error": "OpenAIConnectionError: Connection error.", "at": 1795543784.1361291}
+{"population": "gpt-oss-120b", "condition": "weak", "world_seed": 6, "error": "OpenAIConnectionError: Connection error.", "at": 1795543784.170652}
+{"population": "mix_late", "condition": "independent", "world_seed": 3, "error": "OpenAIConnectionError: Connection error.", "at": 1795543784.1716518}
+{"population": "mix_early", "condition": "strong", "world_seed": 3, "error": "OpenAIConnectionError: Connection error.", "at": 1795543784.220478}
+{"population": "llama-3.1-8b", "condition": "independent", "world_seed": 0, "error": "OpenAIConnectionError: Connection error.", "at": 1795543784.521889}
+{"population": "mix_late", "condition": "weak", "world_seed": 7, "error": "OpenAIConnectionError: Connection error.", "at": 1795543784.5504117}
+{"population": "llama-3.1-8b", "condition": "weak", "world_seed": 3, "error": "OpenAIConnectionError: Connection error.", "at": 1795543784.661157}
+{"population": "llama-3.1-8b", "condition": "independent", "world_seed": 1, "error": "OpenAIConnectionError: Connection error.", "at": 1795543784.7187095}
+{"population": "llama-3.1-8b", "condition": "independent", "world_seed": 7, "error": "OpenAIConnectionError: Connection error.", "at": 1795543784.719708}
+{"population": "mix_late", "condition": "strong", "world_seed": 2, "error": "OpenAIConnectionError: Connection error.", "at": 1795543784.777393}
+{"population": "mix_early", "condition": "independent", "world_seed": 2, "error": "OpenAIConnectionError: Connection error.", "at": 1795543785.0005012}
+{"population": "mix_late", "condition": "weak", "world_seed": 6, "error": "OpenAIConnectionError: Connection error.", "at": 1795543785.10626}
+{"population": "mix_early", "condition": "independent", "world_seed": 6, "error": "OpenAIConnectionError: Connection error.", "at": 1795543785.1387923}
+{"population": "gpt-oss-120b", "condition": "weak", "world_seed": 0, "error": "OpenAIConnectionError: Connection error.", "at": 1795543785.1833174}
+{"population": "gpt-oss-120b", "condition": "strong", "world_seed": 7, "error": "OpenAIConnectionError: Connection error.", "at": 1795543785.3931596}
+{"population": "mix_late", "condition": "weak", "world_seed": 3, "error": "OpenAIConnectionError: Connection error.", "at": 1795543785.530822}
+{"population": "mix_early", "condition": "strong", "world_seed": 5, "error": "OpenAIConnectionError: Connection error.", "at": 1795543785.5318258}
+{"population": "mix_early", "condition": "independent", "world_seed": 7, "error": "OpenAIConnectionError: Connection error.", "at": 1795543785.605832}
+{"population": "llama-3.1-8b", "condition": "weak", "world_seed": 1, "error": "OpenAIConnectionError: Connection error.", "at": 1795543785.8456416}
+{"population": "gpt-oss-120b", "condition": "weak", "world_seed": 2, "error": "OpenAIConnectionError: Connection error.", "at": 1795543785.8456416}
+{"population": "mix_late", "condition": "independent", "world_seed": 4, "error": "OpenAIConnectionError: Connection error.", "at": 1795543785.9010012}
+{"population": "gpt-oss-120b", "condition": "independent", "world_seed": 7, "error": "OpenAIConnectionError: Connection error.", "at": 1795543786.16442}
+{"population": "llama-3.1-8b", "condition": "strong", "world_seed": 2, "error": "OpenAIConnectionError: Connection error.", "at": 1795543786.16442}
+{"population": "mix_early", "condition": "weak", "world_seed": 5, "error": "OpenAIConnectionError: Connection error.", "at": 1795543786.1654153}
+{"population": "mix_early", "condition": "independent", "world_seed": 4, "error": "OpenAIConnectionError: Connection error.", "at": 1795543786.4526215}
+{"population": "mix_early", "condition": "weak", "world_seed": 7, "error": "OpenAIConnectionError: Connection error.", "at": 1795543786.4966428}
+{"population": "gpt-oss-120b", "condition": "independent", "world_seed": 0, "error": "OpenAIConnectionError: Connection error.", "at": 1795543786.497643}
+{"population": "llama-3.1-8b", "condition": "weak", "world_seed": 4, "error": "OpenAIConnectionError: Connection error.", "at": 1795543786.73376}
+{"population": "mix_late", "condition": "independent", "world_seed": 7, "error": "OpenAIConnectionError: Connection error.", "at": 1795543786.7886033}
+{"population": "gpt-oss-120b", "condition": "independent", "world_seed": 4, "error": "OpenAIConnectionError: Connection error.", "at": 1795543786.8311663}
+{"population": "llama-3.1-8b", "condition": "strong", "world_seed": 1, "error": "OpenAIConnectionError: Connection error.", "at": 1795543787.0152364}
+{"population": "mix_early", "condition": "independent", "world_seed": 0, "error": "OpenAIConnectionError: Connection error.", "at": 1795543787.3608558}
+{"population": "gpt-oss-120b", "condition": "seeded_wrong", "world_seed": 7, "error": "OpenAIConnectionError: Connection error.", "at": 1795543787.5510628}
+{"population": "llama-3.1-8b", "condition": "seeded_wrong", "world_seed": 7, "error": "OpenAIConnectionError: Connection error.", "at": 1795543787.5519953}
+{"population": "mix_early", "condition": "weak", "world_seed": 2, "error": "OpenAIConnectionError: Connection error.", "at": 1795543787.6544116}
+{"population": "gpt-oss-120b", "condition": "weak", "world_seed": 5, "error": "OpenAIConnectionError: Connection error.", "at": 1795543787.7344763}
+{"population": "gpt-oss-120b", "condition": "independent", "world_seed": 6, "error": "OpenAIConnectionError: Connection error.", "at": 1795543787.8992853}
+{"population": "mix_late", "condition": "weak", "world_seed": 4, "error": "OpenAIConnectionError: Connection error.", "at": 1795543787.9479647}
+{"population": "gpt-oss-120b", "condition": "strong", "world_seed": 3, "error": "OpenAIConnectionError: Connection error.", "at": 1795543788.1160371}
+{"population": "gpt-oss-120b", "condition": "seeded_wrong", "world_seed": 0, "error": "OpenAIConnectionError: Connection error.", "at": 1795543788.1170444}
+{"population": "llama-3.1-8b", "condition": "seeded_wrong", "world_seed": 2, "error": "OpenAIConnectionError: Connection error.", "at": 1795543788.2163599}
+{"population": "mix_early", "condition": "independent", "world_seed": 1, "error": "OpenAIConnectionError: Connection error.", "at": 1795543788.3144617}
+{"population": "gpt-oss-120b", "condition": "independent", "world_seed": 1, "error": "OpenAIConnectionError: Connection error.", "at": 1795543788.448105}
+{"population": "llama-3.1-8b", "condition": "independent", "world_seed": 5, "error": "OpenAIConnectionError: Connection error.", "at": 1795543788.5256174}
+{"population": "gpt-oss-120b", "condition": "strong", "world_seed": 5, "error": "OpenAIConnectionError: Connection error.", "at": 1795543788.6311364}
+{"population": "mix_late", "condition": "weak", "world_seed": 1, "error": "OpenAIConnectionError: Connection error.", "at": 1795543788.7449763}
+{"population": "gpt-oss-120b", "condition": "seeded_wrong", "world_seed": 4, "error": "OpenAIConnectionError: Connection error.", "at": 1795543788.821972}
+{"population": "mix_late", "condition": "strong", "world_seed": 4, "error": "OpenAIConnectionError: Connection error.", "at": 1795543788.845566}
+{"population": "gpt-oss-120b", "condition": "strong", "world_seed": 1, "error": "OpenAIConnectionError: Connection error.", "at": 1795543788.845566}
+{"population": "llama-3.1-8b", "condition": "seeded_wrong", "world_seed": 3, "error": "OpenAIConnectionError: Connection error.", "at": 1795543789.1348662}
+{"population": "gpt-oss-120b", "condition": "seeded_wrong", "world_seed": 5, "error": "OpenAIConnectionError: Connection error.", "at": 1795543789.2259653}
+{"population": "gpt-oss-120b", "condition": "seeded_wrong", "world_seed": 6, "error": "OpenAIConnectionError: Connection error.", "at": 1795543789.277561}
