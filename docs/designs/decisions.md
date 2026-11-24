@@ -71,3 +71,14 @@ Choices the design doc leaves open, and changes made to the repo. One entry each
 - **Mixed pairing fixed.** Weaker = `llama-3.1-8b`, stronger = `gpt-oss-120b`. `independent` accuracy differs by about 12 points (73.0% against 85.2%), so the pair is separated enough. Haiku was not needed to decide this.
 - **Cost.** Pilots so far cost about $0.7 in total. Full single-model worlds cost about $0.004 (Llama) and about $0.11 (gpt-oss-120b), so the 144-world batch should land well under the $20 cap.
 - **Batch option.** `asl batch --conditions` limits a batch to some conditions (used for the baseline-only pilots).
+
+## C5 analysis choices (2026-11-24)
+
+- **Data path.** `asl analyze` reads study worlds through the public REST API (runs, run detail, events), so the analysis sees exactly what the site shows. It keeps `pilot = false`, `experiment = cascade_v1`, `prompt_version = c1` and populations in `ASL_STUDY_POPULATIONS` (default: the five study populations).
+- **Holm family fixed at 8.** Holm uses m = 8 whatever number of tests could run, so leaving Haiku out makes the correction no weaker than the pre-registered one.
+- **H2 reference.** `mix_early` positions 61 to 200 against the same positions in the all-`llama-3.1-8b` world with the same condition and seed. Both are one-sided Mann–Whitney on 8 against 8 worlds. The reported difference is mix minus all-weaker. H1 differences are influenced minus `independent`, so negative means harm.
+- **Early-mover correlation.** Per ticket, the HIGH rate among positions 1 to 30 against the HIGH rate among positions 31 and later, pooled over the worlds of a cell. Tickets with no rating on one side are dropped.
+- **Self-correction.** The halves split at position 100. A half with constant HIGH counts gives no rank correlation, and that world is left out of the mean.
+- **Revision floor not reported.** The design asks for the `independent` worlds' own run-to-run disagreement as a floor. Each cell has one run per world seed and the run id is fixed, so there are no repeats to compare. The report says so instead of inventing a floor.
+- **Parse-failure filter.** The sensitivity check drops worlds whose parse failures exceed 5% of agents (failures divided by 200), since the summary carries failure counts, not per-agent flags.
+- **H4 Agreeableness.** Accuracy by the persona's Agreeableness level (low, medium, high) per condition, with the effect against `independent`. Descriptive only.

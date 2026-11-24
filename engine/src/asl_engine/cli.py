@@ -11,7 +11,7 @@ from pathlib import Path
 import httpx
 import typer
 
-from . import config
+from . import analysis, config
 from .budget import Budget
 from .client import post_bundle
 from .config import CONDITIONS, MODEL_REGISTRY, N_AGENTS, POPULATIONS, RESULTS_DIR, conditions_for
@@ -131,3 +131,13 @@ async def _batch(specs: list[tuple[str, str, int]], agents: int, pilot: bool, bu
         await asyncio.gather(*(one(client, spec) for spec in specs))
     typer.echo(f"finished: {counts}")
     return counts["skipped"]
+
+
+@app.command("analyze")
+def analyze(out: Path = typer.Option(None, help="Where to write the report; default results/results.md")) -> None:
+    """Read the study worlds from the API and write the results report."""
+    out = out or RESULTS_DIR / "results.md"
+    worlds = analysis.load_worlds()
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(analysis.render(worlds), encoding="utf-8", newline="")
+    typer.echo(f"{len(worlds)} worlds analysed -> {out}")
