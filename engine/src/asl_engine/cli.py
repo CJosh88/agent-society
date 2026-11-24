@@ -15,7 +15,7 @@ from . import analysis, config
 from .budget import Budget
 from .client import post_bundle
 from .config import CONDITIONS, MODEL_REGISTRY, N_AGENTS, POPULATIONS, RESULTS_DIR, conditions_for
-from .graph import build_graph, run_one
+from .graph import build_graph, run_id, run_one
 from .llm import LLMContext, get_model
 from .personas import write_personas
 
@@ -103,6 +103,15 @@ def batch(
         raise typer.Exit(EXIT_BUDGET)
 
 
+async def _exists(client: httpx.AsyncClient, population: str, condition: str, world_seed: int) -> bool:
+    """True when the API already holds this world, so a rerun does not pay for it again."""
+    try:
+        r = await client.get(f"{config.api_url()}/api/runs/{run_id(population, condition, world_seed)}", timeout=15)
+    except httpx.HTTPError:
+        return False
+    return r.status_code == 200
+
+
 async def _batch(specs: list[tuple[str, str, int]], agents: int, pilot: bool, budget: Budget) -> int:
     sem = asyncio.Semaphore(config.concurrency())
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -116,8 +125,11 @@ async def _batch(specs: list[tuple[str, str, int]], agents: int, pilot: bool, bu
                 counts["skipped"] += 1
                 return
             try:
-                bundle = await run_one(population, condition, w, n_agents=agents, pilot=pilot, budget=budget)
-                counts[await post_bundle(client, bundle)] += 1
+                if await _exists(client, population, condition, w):
+                    counts["exists"] += 1
+                else:
+                    bundle = await run_one(population, condition, w, n_agents=agents, pilot=pilot, budget=budget)
+                    counts[await post_bundle(client, bundle)] += 1
             except Exception as e:  # a failed world is logged and skipped
                 counts["failed"] += 1
                 with failures.open("a", encoding="utf-8") as f:

@@ -1,3 +1,4 @@
+import httpx
 """The provider layer, without any network: result normalisation, retry policy and key checks."""
 
 import pytest
@@ -66,6 +67,12 @@ def test_which_errors_are_transient():
     assert is_transient(StatusError(429)) and is_transient(StatusError(500)) and is_transient(StatusError(503))
     assert not is_transient(StatusError(400)) and not is_transient(StatusError(401))
     assert is_transient(TimeoutError())
+    assert is_transient(httpx.ConnectError("down"))
+
+    class OpenAIConnectionError(Exception):
+        pass
+
+    assert is_transient(OpenAIConnectionError("Connection error."))
     assert not is_transient(ValueError("boom"))
 
 
