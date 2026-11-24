@@ -17,11 +17,11 @@
   },
   {
     "id": "T05",
-    "text": "Password reset emails are not arriving. I have tried four times. Two colleagues who also have accounts have the same problem, and one of us is locked out of a paid subscription that renews today."
+    "text": "Hi, the password reset email never arrives for me. Tried a few times. A colleague says the same. We use the account for a subscription, no idea when it renews."
   },
   {
     "id": "T06",
-    "text": "This is my third message about the refund of $2,300 for our business order, which you agreed to three weeks ago. My bank still shows nothing. I need it this week to pay my supplier."
+    "text": "Following up again on the $2,300 refund for our business order. You said it was approved a few weeks ago and my bank has not shown it yet. Could you check when it will arrive?"
   },
   {
     "id": "T07",
@@ -33,7 +33,7 @@
   },
   {
     "id": "T09",
-    "text": "Our customs broker says the shipment of 300 units we ordered is held at the border because the safety certificate is missing from the paperwork. They need it by tomorrow noon or it goes back."
+    "text": "Our broker mentioned the paperwork for our 300 unit order may be missing a safety certificate. Could you send over whatever you have on file when you get a chance? Delivery is due soon."
   },
   {
     "id": "T10",
@@ -45,7 +45,7 @@
   },
   {
     "id": "T12",
-    "text": "I sent a request on the 3rd asking you to delete my account and all my data. The form said \"done\", but I can still log in and see everything. The legal deadline to answer my request is in three days."
+    "text": "I asked on the 3rd for my account and data to be deleted. The form said done, but my login still seems to work. Is that expected? Thanks."
   },
   {
     "id": "T13",
@@ -53,7 +53,7 @@
   },
   {
     "id": "T14",
-    "text": "Do you know if the green version of the canvas bag is coming back in stock this season? No hurry."
+    "text": "My order arrived with the box crushed on one corner and the bag inside a bit creased. It is still usable. Could you tell me whether this happens often with your carrier? I am quite upset about it."
   },
   {
     "id": "T15",
@@ -73,7 +73,7 @@
   },
   {
     "id": "T19",
-    "text": "Please take me off your newsletter list. I get too many emails."
+    "text": "I have asked THREE TIMES to be taken off your newsletter list and the emails keep coming. This is harassment. Please remove me from the list today."
   },
   {
     "id": "T20",
@@ -89,10 +89,10 @@
   },
   {
     "id": "T23",
-    "text": "I got married and changed my surname. Can you update the name and email address on my account?"
+    "text": "Someone has my old surname and email on file and I need them changed urgently. I think the old email may be in other lists too. Can you update my account name and email?"
   },
   {
     "id": "T24",
-    "text": "How long do I have to return an unworn pair of shoes? I bought them 12 days ago and they do not fit."
+    "text": "The shoes I bought gave me a blister on the first wear. Nothing serious, it has healed. How long do I have to return them? I bought them 12 days ago."
   }
 ]

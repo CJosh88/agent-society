@@ -14,7 +14,7 @@ import typer
 from . import config
 from .budget import Budget
 from .client import post_bundle
-from .config import MODEL_REGISTRY, N_AGENTS, POPULATIONS, RESULTS_DIR, conditions_for
+from .config import CONDITIONS, MODEL_REGISTRY, N_AGENTS, POPULATIONS, RESULTS_DIR, conditions_for
 from .graph import build_graph, run_one
 from .llm import LLMContext, get_model
 from .personas import write_personas
@@ -81,13 +81,19 @@ def batch(
     runs: int = typer.Option(8, help="Worlds per cell"),
     seed: int = typer.Option(0, help="First world seed; seeds seed..seed+runs-1 are shared by every cell"),
     agents: int = typer.Option(N_AGENTS, help="Agents per world"),
+    conditions: str = typer.Option("", help="Comma-separated conditions to run; default is every condition"),
     pilot: bool = False,
 ) -> None:
     """Run populations x conditions x world seeds in shuffled order, up to ASL_CONCURRENCY worlds at once."""
     keys = [m.strip() for m in models.split(",") if m.strip()]
     for k in keys:
         _check_population(k)
-    specs = [(pop, c, seed + i) for pop in keys for c in conditions_for(pop) for i in range(runs)]
+    wanted = [c.strip() for c in conditions.split(",") if c.strip()]
+    bad = [c for c in wanted if c not in CONDITIONS]
+    if bad:
+        raise typer.BadParameter(f"unknown condition(s) {', '.join(bad)}; choose from {', '.join(CONDITIONS)}")
+    specs = [(pop, c, seed + i) for pop in keys for c in conditions_for(pop) if not wanted or c in wanted
+             for i in range(runs)]
     random.Random(seed).shuffle(specs)
     budget = Budget(config.max_usd())
     skipped = asyncio.run(_batch(specs, agents, pilot, budget))

@@ -77,3 +77,14 @@ def test_dotenv_is_loaded_but_the_shell_wins(tmp_path, monkeypatch):
     import os
     assert os.environ["ASL_TEST_FROM_FILE"] == "file" and os.environ["ASL_TEST_BOTH"] == "shell"
     assert config.load_env(tmp_path / "missing.env") is False
+
+
+def test_batch_can_be_limited_to_some_conditions(monkeypatch, isolated_results):
+    monkeypatch.setenv("ASL_API_URL", "http://127.0.0.1:9")  # nothing listens, so each world lands in failures.jsonl
+    r = runner.invoke(app, ["batch", "--models", "fake", "--runs", "2", "--seed", "1", "--agents", "4",
+                            "--conditions", "independent,weak"])
+    assert r.exit_code == 0
+    rows = [json.loads(line) for line in (isolated_results / "failures.jsonl").read_text().splitlines()]
+    assert sorted((x["condition"], x["world_seed"]) for x in rows) == [
+        ("independent", 1), ("independent", 2), ("weak", 1), ("weak", 2)]
+    assert runner.invoke(app, ["batch", "--models", "fake", "--conditions", "calm"]).exit_code != 0

@@ -60,3 +60,14 @@ Choices the design doc leaves open, and changes made to the repo. One entry each
 - **New static file `api/src/main/resources/static/tickets.json`** (id and text only, no truth) so the replay can show ticket text, which bundles do not carry. `test_tickets.py` checks it equals the engine catalogue's text, and `StaticPagesIT` checks it has no `truth` field. Update it whenever the ticket text changes (C4).
 - **Results page.** Per population: a plain-SVG bar chart of mean world accuracy with 95% bootstrap whiskers, then a table and a differences row. Replay speeds are 1×, 4× and 16×.
 - **Checked by hand** in Chrome against fake worlds: replay at a mid position with truth revealed, the results chart and table, and no console errors on either page.
+
+## C4 pilots and calibration (2026-11-24)
+
+- **Pilots are declared and excluded.** All were `independent`, `--pilot`, world seeds 101–104, 200 agents, on Llama and gpt-oss-120b. Haiku was skipped (no Anthropic key yet); its pilot, and the `claude-haiku-5-5` population, wait until the key is loaded.
+- **First draft failed the window.** Seed 101: gpt-oss-120b 96.5% (above 95%), Llama 91.9%.
+- **Calibration, on `independent` only.** Eight ticket texts were changed and the truth labels stayed fixed. Four serious tickets (T05, T06, T09, T12) are quieter and vaguer; four routine ones (T14, T19, T23, T24) sound more alarming. No `calm`-vs-influence data was looked at. `static/tickets.json` was regenerated to match.
+- **Result on seeds 102–104.** gpt-oss-120b 84.6%, 86.9%, 84.1% (mean 85.2%, SD 1.5 points, 0 parse failures). Llama 73.1%, 71.5%, 74.5% (mean 73.0%, SD 1.5 points, 6, 6 and 8 failed parses over about 205 calls, so 3–4%, under 5%). Both are inside 55–95%. Truncations 0. Probe: 3 of 60 sampled answers recognised the setup (all in gpt-oss-120b seed 102 and Llama seed 102), so the disguise holds.
+- **Power note.** Simulated one-sided Mann–Whitney at 8 against 8 worlds with Holm over 8 tests (alpha 0.00625), normal world accuracies around 0.80. With the pilot spread (SD about 1.5 points) a drop of 3 points is detected about 95% of the time and 2 points about 60%. If the spread is double (SD 3 points) only a drop of 8 points or more is reliable (about 97%); 5 points is about 62%. The pilot SD comes from three worlds per model, so it is rough, and the influenced conditions may be noisier than `independent`.
+- **Mixed pairing fixed.** Weaker = `llama-3.1-8b`, stronger = `gpt-oss-120b`. `independent` accuracy differs by about 12 points (73.0% against 85.2%), so the pair is separated enough. Haiku was not needed to decide this.
+- **Cost.** Pilots so far cost about $0.7 in total. Full single-model worlds cost about $0.004 (Llama) and about $0.11 (gpt-oss-120b), so the 144-world batch should land well under the $20 cap.
+- **Batch option.** `asl batch --conditions` limits a batch to some conditions (used for the baseline-only pilots).
